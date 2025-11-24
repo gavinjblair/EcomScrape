@@ -3,7 +3,8 @@
 <head>
   <meta charset="UTF-8" />
   <meta name="viewport" content="width=device-width, initial-scale=1.0" />
-  <title>EcomScrape Products</title>
+  <title>EcomScrape - Category Dashboard</title>
+  <script src="https://cdn.jsdelivr.net/npm/chart.js@4.4.1/dist/chart.umd.min.js"></script>
   <style>
     :root {
       --bg: #f5f7fb;
@@ -13,197 +14,182 @@
       --muted: #475569;
       --accent: #2563eb;
       --accent-2: #10b981;
-      --warning-bg: #fff7e6;
-      --warning-text: #9a5b00;
     }
     * { box-sizing: border-box; }
-    body { margin: 0; padding: 24px; font-family: "Inter", Arial, sans-serif; background: var(--bg); color: var(--text); }
-    header { display: flex; align-items: center; justify-content: space-between; margin-bottom: 20px; }
+    body { font-family: "Inter", Arial, sans-serif; margin: 0; padding: 24px; background: var(--bg); color: var(--text); }
+    header { display: flex; align-items: center; justify-content: space-between; margin-bottom: 16px; }
     h1 { margin: 0; font-size: 26px; letter-spacing: -0.2px; }
-    nav a { margin-left: 12px; color: var(--accent); text-decoration: none; font-weight: 600; }
+    nav a { color: var(--accent); text-decoration: none; font-weight: 600; margin-left: 12px; }
     nav a:hover { text-decoration: underline; }
-    .card { background: var(--panel); border: 1px solid var(--border); border-radius: 12px; padding: 16px; box-shadow: 0 8px 24px rgba(15, 23, 42, 0.04); }
-    .controls { display: grid; grid-template-columns: repeat(auto-fit, minmax(200px, 1fr)); gap: 14px; }
-    label { font-weight: 600; font-size: 13px; color: var(--muted); display: block; margin-bottom: 4px; }
-    input, select { width: 100%; padding: 10px 12px; border: 1px solid var(--border); border-radius: 8px; font-size: 14px; background: #fff; }
-    .actions { display: flex; gap: 10px; align-items: flex-end; flex-wrap: wrap; }
-    button { padding: 10px 14px; font-weight: 600; border: none; border-radius: 8px; cursor: pointer; transition: transform 0.05s ease, box-shadow 0.1s ease; }
-    button:active { transform: translateY(1px); }
-    .primary { background: var(--accent); color: #fff; box-shadow: 0 8px 16px rgba(37, 99, 235, 0.18); }
-    .secondary { background: var(--panel); color: var(--text); border: 1px solid var(--border); }
-    table { width: 100%; border-collapse: collapse; margin-top: 12px; background: var(--panel); border: 1px solid var(--border); border-radius: 10px; overflow: hidden; }
-    th, td { padding: 12px; border-bottom: 1px solid var(--border); text-align: left; font-size: 14px; }
-    th { background: #f8fafc; color: var(--muted); text-transform: uppercase; letter-spacing: 0.4px; font-size: 12px; }
-    tr:hover td { background: #f8fafc; }
-    .summary { margin-top: 10px; font-weight: 700; color: var(--muted); }
-    .message { margin-top: 12px; padding: 12px 14px; background: var(--warning-bg); color: var(--warning-text); border: 1px solid #f4c768; border-radius: 10px; }
-    .meta { display: flex; gap: 12px; flex-wrap: wrap; margin-top: 10px; color: var(--muted); font-weight: 600; }
-    @media (max-width: 640px) { header { flex-direction: column; align-items: flex-start; gap: 8px; } }
+    .panel { background: var(--panel); padding: 14px; border: 1px solid var(--border); border-radius: 12px; margin-bottom: 16px; box-shadow: 0 8px 24px rgba(15, 23, 42, 0.04); }
+    .charts { display: grid; grid-template-columns: repeat(auto-fit, minmax(320px, 1fr)); gap: 16px; }
+    canvas { background: #fff; border: 1px solid var(--border); border-radius: 12px; padding: 8px; }
+    h3 { margin: 6px 0 8px; color: var(--muted); }
   </style>
 </head>
 <body>
   <header>
-    <h1>EcomScrape Products</h1>
+    <h1>EcomScrape - Category Dashboard</h1>
     <nav>
-      <!-- Static link for GitHub Pages -->
-      <a href="charts.html">Charts</a>
+      <!-- relative link for GitHub Pages -->
+      <a href="./index.html">Products</a>
     </nav>
   </header>
 
-  <div class="card" style="margin-bottom:16px;">
-    <div class="controls">
-      <div>
-        <label for="minPrice">Min price</label>
-        <input type="number" id="minPrice" step="0.01" placeholder="e.g. 5" />
-      </div>
-      <div>
-        <label for="maxPrice">Max price</label>
-        <input type="number" id="maxPrice" step="0.01" placeholder="e.g. 50" />
-      </div>
-      <div>
-        <label for="category">Category</label>
-        <select id="category">
-          <option value="">All categories</option>
-        </select>
-      </div>
-      <div class="actions">
-        <button id="loadBtn" class="primary">Load products</button>
-        <button id="resetBtn" class="secondary">Reset filters</button>
-      </div>
+  <div class="panel" id="statusPanel">
+    <div>Total products: <span id="totalProducts">-</span></div>
+    <div>Data generated at: <span id="generatedAt">-</span></div>
+  </div>
+
+  <div class="charts">
+    <div class="panel">
+      <h3>Category counts</h3>
+      <canvas id="categoryCounts"></canvas>
     </div>
-    <div class="meta">
-      <span id="dataInfo"></span>
-      <span id="generatedAt"></span>
+    <div class="panel">
+      <h3>Average price per category</h3>
+      <canvas id="avgPrice"></canvas>
+    </div>
+    <div class="panel">
+      <h3>Price distribution</h3>
+      <canvas id="priceDist"></canvas>
     </div>
   </div>
 
-  <div id="message" class="message" style="display:none;"></div>
-
-  <table id="productsTable" style="display:none;">
-    <thead>
-      <tr>
-        <th>Title</th>
-        <th>Category</th>
-        <th>Price</th>
-        <th>Rating</th>
-        <th>Availability</th>
-      </tr>
-    </thead>
-    <tbody></tbody>
-  </table>
-
   <script>
-    const categorySelect = document.getElementById('category');
-    const minPriceInput = document.getElementById('minPrice');
-    const maxPriceInput = document.getElementById('maxPrice');
-    const messageBox = document.getElementById('message');
-    const dataInfo = document.getElementById('dataInfo');
-    const generatedAt = document.getElementById('generatedAt');
-    const table = document.getElementById('productsTable');
-    const tbody = table.querySelector('tbody');
-
-    function formatPrice(product) {
-      const price = product.price_current ?? product.price_original;
-      return price !== null && price !== undefined ? price : '-';
+    function priceValue(p) {
+      return p.price_current ?? p.price_original ?? null;
     }
 
-    function setMessage(text) {
-      messageBox.style.display = text ? 'block' : 'none';
-      messageBox.textContent = text || '';
-    }
-
-    function populateCategories(products) {
-      const cats = Array.from(new Set(products.map(p => p.category || 'unknown'))).sort();
-      categorySelect.innerHTML = '<option value="">All categories</option>';
-      cats.forEach(cat => {
-        const opt = document.createElement('option');
-        opt.value = cat;
-        opt.textContent = cat;
-        categorySelect.appendChild(opt);
-      });
-    }
-
-    async function fetchProducts() {
-      // Load static dataset for GitHub Pages
-      const res = await fetch("datasets/latest_products.json");
-      if (!res.ok) {
-        throw new Error('Failed to load products');
-      }
-      const data = await res.json();
-      let products = data.products || [];
-
-      // Client-side filtering (since there's no backend here)
-      const min = parseFloat(minPriceInput.value);
-      const max = parseFloat(maxPriceInput.value);
-      const cat = categorySelect.value;
-
-      if (!Number.isNaN(min)) {
-        products = products.filter(p => (p.price_current ?? p.price_original) >= min);
-      }
-      if (!Number.isNaN(max)) {
-        products = products.filter(p => (p.price_current ?? p.price_original) <= max);
-      }
-      if (cat) {
-        products = products.filter(p => p.category === cat);
-      }
-
-      return {
-        ...data,
-        products
-      };
-    }
-
-    function render(products, meta) {
-      tbody.innerHTML = '';
-      if (!products || products.length === 0) {
-        table.style.display = 'none';
-        setMessage('No product data available. If running locally, run the scraper, e.g.: ecomscrape -c configs/books_toscrape.yaml -f json');
-        dataInfo.textContent = '';
-        generatedAt.textContent = meta.generated_at ? `Data generated at: ${meta.generated_at}` : '';
-        return;
-      }
-      setMessage('');
-      table.style.display = 'table';
+    function buildCategoryCounts(products) {
+      const counts = {};
       products.forEach(p => {
-        const tr = document.createElement('tr');
-        tr.innerHTML = `
-          <td>${p.title || p.name || ''}</td>
-          <td>${p.category || '-'}</td>
-          <td>${formatPrice(p)}</td>
-          <td>${p.rating ?? '-'}</td>
-          <td>${p.availability || '-'}</td>
-        `;
-        tbody.appendChild(tr);
+        const c = p.category || 'unknown';
+        counts[c] = (counts[c] || 0) + 1;
       });
-      dataInfo.textContent = `${products.length} product(s) displayed.`;
-      generatedAt.textContent = meta.generated_at ? `Data generated at: ${meta.generated_at}` : '';
+      return counts;
     }
 
-    async function loadAndRender(initialLoad = false) {
-      try {
-        const data = await fetchProducts();
-        if (initialLoad) {
-          populateCategories(data.products || []);
+    function buildAvgPrice(products) {
+      const acc = {};
+      products.forEach(p => {
+        const val = priceValue(p);
+        if (val === null) return;
+        const cat = p.category || 'unknown';
+        if (!acc[cat]) acc[cat] = { sum: 0, count: 0 };
+        acc[cat].sum += val;
+        acc[cat].count += 1;
+      });
+      const result = {};
+      Object.entries(acc).forEach(([cat, { sum, count }]) => {
+        result[cat] = sum / count;
+      });
+      return result;
+    }
+
+    function buildPriceBins(products, bins = 10) {
+      const values = products.map(priceValue).filter(v => v !== null);
+      if (!values.length) return { labels: [], counts: [] };
+
+      const min = Math.min(...values);
+      const max = Math.max(...values);
+      const binSize = (max - min) / bins || 1;
+
+      const counts = new Array(bins).fill(0);
+      values.forEach(v => {
+        let idx = Math.floor((v - min) / binSize);
+        if (idx >= bins) idx = bins - 1;
+        counts[idx] += 1;
+      });
+
+      const labels = counts.map((_, i) => {
+        const start = (min + i * binSize).toFixed(2);
+        const end = (min + (i + 1) * binSize).toFixed(2);
+        return `${start} - ${end}`;
+      });
+
+      return { labels, counts };
+    }
+
+    function renderBarChart(ctx, labels, data, title, color) {
+      return new Chart(ctx, {
+        type: 'bar',
+        data: {
+          labels,
+          datasets: [{ label: title, data, backgroundColor: color }]
+        },
+        options: {
+          responsive: true,
+          scales: {
+            x: { ticks: { autoSkip: false, maxRotation: 45 } },
+            y: { beginAtZero: true }
+          }
         }
-        render(data.products || [], data);
+      });
+    }
+
+    async function loadData() {
+      const res = await fetch("./datasets/latest_products.json");
+      if (!res.ok) throw new Error("Failed to load products");
+      const raw = await res.json();
+
+      let products;
+      let generatedAt = null;
+
+      if (Array.isArray(raw)) {
+        products = raw;
+      } else if (Array.isArray(raw.products)) {
+        products = raw.products;
+        generatedAt = raw.generated_at ?? null;
+      } else {
+        products = [];
+        generatedAt = raw.generated_at ?? null;
+      }
+
+      return { products, generated_at: generatedAt };
+    }
+
+    async function init() {
+      try {
+        const data = await loadData();
+        const products = data.products || [];
+
+        document.getElementById('totalProducts').textContent = products.length;
+        document.getElementById('generatedAt').textContent = data.generated_at || '-';
+
+        const countsMap = buildCategoryCounts(products);
+        renderBarChart(
+          document.getElementById("categoryCounts"),
+          Object.keys(countsMap),
+          Object.values(countsMap),
+          "Count",
+          "#2563eb"
+        );
+
+        const avgMap = buildAvgPrice(products);
+        renderBarChart(
+          document.getElementById("avgPrice"),
+          Object.keys(avgMap),
+          Object.values(avgMap),
+          "Avg price",
+          "#10b981"
+        );
+
+        const bins = buildPriceBins(products, 12);
+        renderBarChart(
+          document.getElementById("priceDist"),
+          bins.labels,
+          bins.counts,
+          "Price distribution",
+          "#f59e0b"
+        );
       } catch (err) {
-        setMessage(err.message);
-        table.style.display = 'none';
-        dataInfo.textContent = '';
-        generatedAt.textContent = '';
+        document.getElementById("statusPanel").innerHTML =
+          `<div style="color:#b91c1c;">${err.message}</div>`;
       }
     }
 
-    document.getElementById('loadBtn').addEventListener('click', () => loadAndRender(false));
-    document.getElementById('resetBtn').addEventListener('click', () => {
-      minPriceInput.value = '';
-      maxPriceInput.value = '';
-      categorySelect.value = '';
-      loadAndRender(false);
-    });
-
-    // Auto-load on page ready
-    loadAndRender(true);
+    init();
   </script>
 </body>
 </html>
