@@ -30,8 +30,9 @@
 <body>
   <header>
     <h1>EcomScrape - Category Dashboard</h1>
+    <!-- Static link for GitHub Pages -->
     <nav>
-      <a href="/">Products</a>
+      <a href="index.html">Products</a>
     </nav>
   </header>
 
@@ -57,14 +58,10 @@
 
   <script>
     function priceValue(p) {
-      // Choose whichever price field is populated for charting.
-      if (p.price_current !== null && p.price_current !== undefined) return p.price_current;
-      if (p.price_original !== null && p.price_original !== undefined) return p.price_original;
-      return null;
+      return p.price_current ?? p.price_original ?? null;
     }
 
     function buildCategoryCounts(products) {
-      // Count occurrences per category for the bar chart.
       const counts = {};
       products.forEach(p => {
         const c = p.category || 'unknown';
@@ -74,15 +71,14 @@
     }
 
     function buildAvgPrice(products) {
-      // Compute mean price per category while ignoring missing prices.
       const acc = {};
       products.forEach(p => {
         const val = priceValue(p);
         if (val === null) return;
-        const c = p.category || 'unknown';
-        if (!acc[c]) acc[c] = { sum: 0, count: 0 };
-        acc[c].sum += val;
-        acc[c].count += 1;
+        const cat = p.category || 'unknown';
+        if (!acc[cat]) acc[cat] = { sum: 0, count: 0 };
+        acc[cat].sum += val;
+        acc[cat].count += 1;
       });
       const result = {};
       Object.entries(acc).forEach(([cat, { sum, count }]) => {
@@ -92,28 +88,30 @@
     }
 
     function buildPriceBins(products, bins = 10) {
-      // Create simple histogram buckets for price spread.
       const values = products.map(priceValue).filter(v => v !== null);
       if (!values.length) return { labels: [], counts: [] };
+
       const min = Math.min(...values);
       const max = Math.max(...values);
       const binSize = (max - min) / bins || 1;
+
       const counts = new Array(bins).fill(0);
       values.forEach(v => {
         let idx = Math.floor((v - min) / binSize);
         if (idx >= bins) idx = bins - 1;
         counts[idx] += 1;
       });
+
       const labels = counts.map((_, i) => {
         const start = (min + i * binSize).toFixed(2);
         const end = (min + (i + 1) * binSize).toFixed(2);
         return `${start} - ${end}`;
       });
+
       return { labels, counts };
     }
 
-    function renderBarChart(ctx, labels, data, title, color = '#2563eb') {
-      // Reusable bar chart setup with modest styling.
+    function renderBarChart(ctx, labels, data, title, color) {
       return new Chart(ctx, {
         type: 'bar',
         data: {
@@ -123,7 +121,7 @@
         options: {
           responsive: true,
           scales: {
-            x: { ticks: { autoSkip: false, maxRotation: 45, minRotation: 0 } },
+            x: { ticks: { autoSkip: false, maxRotation: 45 } },
             y: { beginAtZero: true }
           }
         }
@@ -131,14 +129,13 @@
     }
 
     async function loadData() {
-      // Fetch all products; charts rely on full dataset.
-      const res = await fetch('/products');
-      if (!res.ok) throw new Error('Failed to load products');
+      // Static JSON for GitHub Pages
+      const res = await fetch("datasets/latest_products.json");
+      if (!res.ok) throw new Error("Failed to load products");
       return res.json();
     }
 
     async function init() {
-      // Drive the dashboard once data is available.
       try {
         const data = await loadData();
         const products = data.products || [];
@@ -147,19 +144,35 @@
         document.getElementById('generatedAt').textContent = data.generated_at || '-';
 
         const countsMap = buildCategoryCounts(products);
-        const countsLabels = Object.keys(countsMap);
-        const countsData = countsLabels.map(l => countsMap[l]);
-        renderBarChart(document.getElementById('categoryCounts'), countsLabels, countsData, 'Count', '#2563eb');
+        renderBarChart(
+          document.getElementById("categoryCounts"),
+          Object.keys(countsMap),
+          Object.values(countsMap),
+          "Count",
+          "#2563eb"
+        );
 
-        const avgPriceMap = buildAvgPrice(products);
-        const avgLabels = Object.keys(avgPriceMap);
-        const avgData = avgLabels.map(l => avgPriceMap[l]);
-        renderBarChart(document.getElementById('avgPrice'), avgLabels, avgData, 'Avg price', '#10b981');
+        const avgMap = buildAvgPrice(products);
+        renderBarChart(
+          document.getElementById("avgPrice"),
+          Object.keys(avgMap),
+          Object.values(avgMap),
+          "Avg price",
+          "#10b981"
+        );
 
         const bins = buildPriceBins(products, 12);
-        renderBarChart(document.getElementById('priceDist'), bins.labels, bins.counts, 'Price distribution', '#f59e0b');
+        renderBarChart(
+          document.getElementById("priceDist"),
+          bins.labels,
+          bins.counts,
+          "Price distribution",
+          "#f59e0b"
+        );
+
       } catch (err) {
-        document.getElementById('statusPanel').innerHTML = `<div style="color:#b91c1c;">${err.message}</div>`;
+        document.getElementById("statusPanel").innerHTML =
+          `<div style="color:#b91c1c;">${err.message}</div>`;
       }
     }
 
