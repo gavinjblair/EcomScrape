@@ -45,7 +45,8 @@
   <header>
     <h1>EcomScrape Products</h1>
     <nav>
-      <a href="/charts">Charts</a>
+      <!-- Static link for GitHub Pages -->
+      <a href="charts.html">Charts</a>
     </nav>
   </header>
 
@@ -102,21 +103,18 @@
     const tbody = table.querySelector('tbody');
 
     function formatPrice(product) {
-      // Prefer current price, fall back to original price, otherwise show dash.
       const price = product.price_current ?? product.price_original;
       return price !== null && price !== undefined ? price : '-';
     }
 
     function setMessage(text) {
-      // Toggle banner for errors or empty-data guidance.
       messageBox.style.display = text ? 'block' : 'none';
       messageBox.textContent = text || '';
     }
 
     function populateCategories(products) {
-      // Build category options from the data to avoid hard-coding values.
       const cats = Array.from(new Set(products.map(p => p.category || 'unknown'))).sort();
-      categorySelect.innerHTML = '<option value=\"\">All categories</option>';
+      categorySelect.innerHTML = '<option value="">All categories</option>';
       cats.forEach(cat => {
         const opt = document.createElement('option');
         opt.value = cat;
@@ -126,26 +124,40 @@
     }
 
     async function fetchProducts() {
-      // Call the API with optional filters derived from the form controls.
-      const params = new URLSearchParams();
-      if (minPriceInput.value) params.set('min_price', minPriceInput.value);
-      if (maxPriceInput.value) params.set('max_price', maxPriceInput.value);
-      if (categorySelect.value) params.set('category', categorySelect.value);
-
-      const url = params.toString() ? `/products?${params.toString()}` : '/products';
-      const res = await fetch(url);
+      // Load static dataset for GitHub Pages
+      const res = await fetch("datasets/latest_products.json");
       if (!res.ok) {
         throw new Error('Failed to load products');
       }
-      return res.json();
+      const data = await res.json();
+      let products = data.products || [];
+
+      // Client-side filtering (since there's no backend here)
+      const min = parseFloat(minPriceInput.value);
+      const max = parseFloat(maxPriceInput.value);
+      const cat = categorySelect.value;
+
+      if (!Number.isNaN(min)) {
+        products = products.filter(p => (p.price_current ?? p.price_original) >= min);
+      }
+      if (!Number.isNaN(max)) {
+        products = products.filter(p => (p.price_current ?? p.price_original) <= max);
+      }
+      if (cat) {
+        products = products.filter(p => p.category === cat);
+      }
+
+      return {
+        ...data,
+        products
+      };
     }
 
     function render(products, meta) {
-      // Render table rows and supporting meta info.
       tbody.innerHTML = '';
       if (!products || products.length === 0) {
         table.style.display = 'none';
-        setMessage('No product data available. Run the scraper, e.g.: ecomscrape -c configs/books_toscrape.yaml -f json');
+        setMessage('No product data available. If running locally, run the scraper, e.g.: ecomscrape -c configs/books_toscrape.yaml -f json');
         dataInfo.textContent = '';
         generatedAt.textContent = meta.generated_at ? `Data generated at: ${meta.generated_at}` : '';
         return;
@@ -168,7 +180,6 @@
     }
 
     async function loadAndRender(initialLoad = false) {
-      // Wrapper to fetch, populate categories on first pass, and render the view.
       try {
         const data = await fetchProducts();
         if (initialLoad) {
@@ -196,3 +207,4 @@
   </script>
 </body>
 </html>
+
