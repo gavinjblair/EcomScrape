@@ -30,9 +30,8 @@
 <body>
   <header>
     <h1>EcomScrape - Category Dashboard</h1>
-    <!-- Static link for GitHub Pages -->
     <nav>
-      <a href="index.html">Products</a>
+      <a href="./index.html">Products</a>
     </nav>
   </header>
 
@@ -58,13 +57,15 @@
 
   <script>
     function priceValue(p) {
-      return p.price_current ?? p.price_original ?? null;
+      const raw = p.price_current ?? p.price_original;
+      const num = typeof raw === "string" ? parseFloat(raw) : raw;
+      return Number.isFinite(num) ? num : null;
     }
 
     function buildCategoryCounts(products) {
       const counts = {};
       products.forEach(p => {
-        const c = p.category || 'unknown';
+        const c = p.category || "unknown";
         counts[c] = (counts[c] || 0) + 1;
       });
       return counts;
@@ -75,16 +76,16 @@
       products.forEach(p => {
         const val = priceValue(p);
         if (val === null) return;
-        const cat = p.category || 'unknown';
-        if (!acc[cat]) acc[cat] = { sum: 0, count: 0 };
-        acc[cat].sum += val;
-        acc[cat].count += 1;
+        const c = p.category || "unknown";
+        if (!acc[c]) acc[c] = { sum: 0, count: 0 };
+        acc[c].sum += val;
+        acc[c].count += 1;
       });
-      const result = {};
+      const out = {};
       Object.entries(acc).forEach(([cat, { sum, count }]) => {
-        result[cat] = sum / count;
+        out[cat] = sum / count;
       });
-      return result;
+      return out;
     }
 
     function buildPriceBins(products, bins = 10) {
@@ -112,8 +113,8 @@
     }
 
     function renderBarChart(ctx, labels, data, title, color) {
-      return new Chart(ctx, {
-        type: 'bar',
+      new Chart(ctx, {
+        type: "bar",
         data: {
           labels,
           datasets: [{ label: title, data, backgroundColor: color }]
@@ -129,10 +130,24 @@
     }
 
     async function loadData() {
-      // Static JSON for GitHub Pages
-      const res = await fetch("datasets/latest_products.json");
+      const res = await fetch("./datasets/latest_products.json");
       if (!res.ok) throw new Error("Failed to load products");
-      return res.json();
+      const raw = await res.json();
+
+      let products;
+      let generatedAt = null;
+
+      if (Array.isArray(raw)) {
+        products = raw;
+      } else if (Array.isArray(raw.products)) {
+        products = raw.products;
+        generatedAt = raw.generated_at ?? null;
+      } else {
+        products = [];
+        generatedAt = raw.generated_at ?? null;
+      }
+
+      return { products, generated_at: generatedAt };
     }
 
     async function init() {
@@ -140,8 +155,14 @@
         const data = await loadData();
         const products = data.products || [];
 
-        document.getElementById('totalProducts').textContent = products.length;
-        document.getElementById('generatedAt').textContent = data.generated_at || '-';
+        document.getElementById("totalProducts").textContent = products.length;
+        document.getElementById("generatedAt").textContent = data.generated_at || "-";
+
+        if (!products.length) {
+          document.getElementById("statusPanel").innerHTML =
+            '<div style="color:#b91c1c;">No products found in dataset.</div>';
+          return;
+        }
 
         const countsMap = buildCategoryCounts(products);
         renderBarChart(
@@ -169,7 +190,6 @@
           "Price distribution",
           "#f59e0b"
         );
-
       } catch (err) {
         document.getElementById("statusPanel").innerHTML =
           `<div style="color:#b91c1c;">${err.message}</div>`;
