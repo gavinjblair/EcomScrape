@@ -1,0 +1,57 @@
+site_name: "books_toscrape"
+base_url: "https://books.toscrape.com/"
+start_urls:
+  - "https://books.toscrape.com/catalogue/category/books_1/index.html"
+currency: "GBP"
+request:
+  timeout: 10
+  max_retries: 3
+  backoff_factor: 0.5
+  delay_between_requests: 1.0
+  max_workers: 1
+  retry_status_forcelist: [429, 500, 502, 503, 504]
+  user_agents:
+    - "Mozilla/5.0 (Windows NT 10.0; Win64; x64) AppleWebKit/537.36 (KHTML, like Gecko) Chrome/124.0 Safari/537.36"
+    - "Mozilla/5.0 (Macintosh; Intel Mac OS X 10_15_7) AppleWebKit/605.1.15 (KHTML, like Gecko) Version/17.0 Safari/605.1.15"
+    - "Mozilla/5.0 (X11; Ubuntu; Linux x86_64; rv:109.0) Gecko/20100101 Firefox/117.0"
+  headers:
+    Accept-Language: "en-US,en;q=0.9"
+
+pagination:
+  mode: "link"
+  next_selector: "li.next a"
+  max_pages: 3
+
+cleaning:
+  rating_words:
+    one: 1
+    two: 2
+    three: 3
+    four: 4
+    five: 5
+  availability_map:
+    "in stock": "in_stock"
+    "out of stock": "out_of_stock"
+parsing:
+  product_container: "article.product_pod"
+  fields:
+    name:
+      selector: "h3 a"
+      attribute: "title"
+    url:
+      selector: "h3 a"
+      attribute: "href"
+      join_base_url: true
+    price_current:
+      selector: "p.price_color"
+      attribute: "text"
+    availability:
+      selector: "p.instock.availability"
+      attribute: "text"
+    rating:
+      selector: "p.star-rating"
+      attribute: "class"
+    image_url:
+      selector: "div.image_container img"
+      attribute: "src"
+      join_base_url: true

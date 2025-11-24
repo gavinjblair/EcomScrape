@@ -1,0 +1,83 @@
+# EcomScrape – E-commerce Product Scraper & Data Exporter
+
+Python tool that scrapes product listings, cleans and normalises them with Pandas, and exports CSV/Excel/JSON outputs. Includes rotating headers with retries and an optional REST API.
+
+## Quickstart
+
+```bash
+cd EcomScrape
+python -m venv .venv
+.venv\\Scripts\\activate
+pip install -r requirements.txt
+
+# Run the CLI against the sample Books to Scrape site
+python -m ecomscrape.cli --config configs/books_toscrape.yaml --format csv excel json --debug
+python -m ecomscrape.cli -c configs/books_toscrape.yaml -f csv --dry-run --save-raw-html
+```
+
+Exports are written to `outputs/processed` with timestamped filenames plus `latest_products.json` for API use. Logs go to `outputs/scrape.log`.
+
+## Configuration (YAML/JSON)
+
+Key fields in `configs/books_toscrape.yaml`:
+
+- `site_name`, `base_url`, `start_urls`: identify the target site and entry pages.
+- `request`: timeouts, retry counts, backoff, delay between requests, rotating `user_agents`, and extra headers.
+- `parsing`: CSS selector for `product_container` and per-field selectors. Each field supports `selector`, optional `attribute` (`text` to use node text), and `join_base_url` to resolve relative URLs.
+- Optional: `currency`, `max_products`.
+
+Add new configs by copying the sample file and adjusting selectors/URLs.
+
+## CLI Options
+
+- `--config`: path to YAML/JSON config.
+- `--format`: one or more of `csv`, `excel`, `json` (short `-f`).
+- `--max-products`: hard cap on returned products (overrides config value).
+- `--output-dir`: export directory (default `outputs/processed`, short `-o`).
+- `--dry-run`: fetch/parse and log counts without exporting.
+- `--save-raw-html`: store raw HTML to `outputs/raw` for debugging.
+- `--debug`: verbose logs.
+
+Pagination support:
+- `pagination.mode: link` with `next_selector` + `max_pages` follows “next” links automatically.
+- `pagination.mode: format` with `url_template`, `start`, `end` expands URLs via string formatting.
+
+Concurrency:
+- `request.max_workers > 1` fetches pages concurrently; defaults to sequential (1 worker).
+
+Data model:
+- Cleaned rows are represented by a `Product` dataclass (see `ecomscrape/models.py`), then exported via pandas.
+
+Example: `python -m ecomscrape.cli --config configs/books_toscrape.yaml --format csv excel --max-products 100`
+
+## Optional REST API
+
+After running a scrape (which writes `outputs/processed/latest_products.json`):
+
+```bash
+uvicorn ecomscrape.api:app --host 0.0.0.0 --port 8000
+```
+
+- `GET /products?min_price=&max_price=&category=` returns filtered JSON product data.
+- `ECOMSCRAPE_DATA_PATH` can override the location of `latest_products.json`.
+
+## Project Structure
+
+- `ecomscrape/config.py` – config loading/validation.
+- `ecomscrape/fetch.py` – HTTP client with retries and rotating headers.
+- `ecomscrape/parser.py` – HTML parsing driven by selectors.
+- `ecomscrape/cleaner.py` – Pandas-friendly cleaning and normalisation.
+- `ecomscrape/models.py` – `Product` dataclass schema for cleaned records.
+- `ecomscrape/exporter.py` – CSV/Excel/JSON exports plus latest snapshot.
+- `ecomscrape/api.py` – FastAPI endpoint serving the latest dataset.
+- `ecomscrape/cli.py` – orchestrates scrape → clean → export.
+- `configs/` – example and per-site configs.
+- `outputs/` – exports and logs.
+- `tests/` – pytest suite for config, parser, cleaner, exporter.
+
+## Notes
+
+- Scraping real sites must respect their robots.txt and terms of use; keep volumes low and add delays as configured.
+- If no products are parsed (selector mismatch, blocking, empty page), exports will be empty but still produced for visibility.
+- Install in editable mode with `pip install -e .` (uses `pyproject.toml`); console script `ecomscrape` will be available.
+- Run tests with `python -m pytest`.
