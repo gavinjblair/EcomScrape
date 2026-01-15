@@ -132,6 +132,55 @@ def _build_url_plan(
     raise ConfigError(f"Unsupported pagination mode: {pagination.mode}")
 
 
+def _fix_product_url(url: str) -> str:
+    # BooksToScrape detail pages live under /catalogue/. Repair URLs missing that segment.
+    if "/catalogue/" not in url:
+        return url.replace("https://books.toscrape.com/", "https://books.toscrape.com/catalogue/")
+    return url
+
+
+def _enrich_details(records: List[dict], fetcher: Fetcher, logger: logging.Logger) -> None:
+    """
+    For any record missing category/description, fetch its product page and extract details.
+    This is specific to BooksToScrape structure.
+    """
+    targets = []
+    for rec in records:
+        needs_category = not rec.get("category") or rec.get("category") == "unknown"
+        needs_description = not rec.get("description")
+        if not needs_category and not needs_description:
+            continue
+        product_url = rec.get("product_url") or rec.get("url")
+        if not product_url:
+            continue
+        targets.append((rec, _fix_product_url(product_url)))
+
+    if not targets:
+        return
+
+    original_delay = fetcher.settings.delay_between_requests
+    fetcher.settings.delay_between_requests = 0  # speed up enrichment fetches
+
+    urls = [u for _, u in targets]
+    results = fetcher.fetch_all(urls) if fetcher.settings.max_workers > 1 else [fetcher.fetch(u) for u in urls]
+
+    for (rec, _), detail in zip(targets, results):
+        if not detail.html:
+            continue
+        try:
+            soup = BeautifulSoup(detail.html, "lxml")
+            cat_node = soup.select_one("ul.breadcrumb li:nth-last-child(2) a")
+            if cat_node:
+                rec["category"] = cat_node.get_text(strip=True)
+            desc_node = soup.select_one("#product_description + p")
+            if desc_node:
+                rec["description"] = desc_node.get_text(strip=True)
+        except Exception as exc:  # keep enrichment resilient
+            logger.debug("Failed to enrich category for %s: %s", detail.url, exc)
+
+    fetcher.settings.delay_between_requests = original_delay
+
+
 def run(argv: List[str] | None = None) -> int:
     # Main orchestration for CLI usage.
     args = parse_args(argv)
@@ -195,6 +244,9 @@ def run(argv: List[str] | None = None) -> int:
     if args.dry_run:
         logger.info("Dry run: parsed %s products; skipping export.", len(raw_records))
         return 0
+
+    # Enrich missing categories by visiting product detail pages when available.
+    _enrich_details(raw_records, fetcher, logger)
 
     products, cleaned_df = clean_products(
         raw_records, currency=scraper_config.currency, cleaning=scraper_config.cleaning

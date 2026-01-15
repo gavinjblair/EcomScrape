@@ -1,191 +1,151 @@
 <!DOCTYPE html>
 <html lang="en">
 <head>
-  <meta charset="UTF-8" />
-  <meta name="viewport" content="width=device-width, initial-scale=1.0" />
-  <title>EcomScrape Products</title>
-  <style>
-    :root {
-      --bg: #f5f7fb;
-      --panel: #ffffff;
-      --border: #e2e8f0;
-      --text: #0f172a;
-      --muted: #475569;
-      --accent: #2563eb;
-      --accent-2: #10b981;
-      --warning-bg: #fff7e6;
-      --warning-text: #9a5b00;
-    }
-    * { box-sizing: border-box; }
-    body { margin: 0; padding: 24px; font-family: "Inter", Arial, sans-serif; background: var(--bg); color: var(--text); }
-    header { display: flex; align-items: center; justify-content: space-between; margin-bottom: 20px; }
-    h1 { margin: 0; font-size: 26px; letter-spacing: -0.2px; }
-    nav a { margin-left: 12px; color: var(--accent); text-decoration: none; font-weight: 600; }
-    nav a:hover { text-decoration: underline; }
-    .card { background: var(--panel); border: 1px solid var(--border); border-radius: 12px; padding: 16px; box-shadow: 0 8px 24px rgba(15, 23, 42, 0.04); }
-    .controls { display: grid; grid-template-columns: repeat(auto-fit, minmax(200px, 1fr)); gap: 14px; }
-    label { font-weight: 600; font-size: 13px; color: var(--muted); display: block; margin-bottom: 4px; }
-    input, select { width: 100%; padding: 10px 12px; border: 1px solid var(--border); border-radius: 8px; font-size: 14px; background: #fff; }
-    .actions { display: flex; gap: 10px; align-items: flex-end; flex-wrap: wrap; }
-    button { padding: 10px 14px; font-weight: 600; border: none; border-radius: 8px; cursor: pointer; transition: transform 0.05s ease, box-shadow 0.1s ease; }
-    button:active { transform: translateY(1px); }
-    .primary { background: var(--accent); color: #fff; box-shadow: 0 8px 16px rgba(37, 99, 235, 0.18); }
-    .secondary { background: var(--panel); color: var(--text); border: 1px solid var(--border); }
-    table { width: 100%; border-collapse: collapse; margin-top: 12px; background: var(--panel); border: 1px solid var(--border); border-radius: 10px; overflow: hidden; }
-    th, td { padding: 12px; border-bottom: 1px solid var(--border); text-align: left; font-size: 14px; }
-    th { background: #f8fafc; color: var(--muted); text-transform: uppercase; letter-spacing: 0.4px; font-size: 12px; }
-    tr:hover td { background: #f8fafc; }
-    .message { margin-top: 12px; padding: 12px 14px; background: var(--warning-bg); color: var(--warning-text); border: 1px solid #f4c768; border-radius: 10px; }
-    .meta { display: flex; gap: 12px; flex-wrap: wrap; margin-top: 10px; color: var(--muted); font-weight: 600; }
-  </style>
+  <meta charset="UTF-8">
+  <meta name="viewport" content="width=device-width, initial-scale=1.0">
+  <title>EcomScrape | Home</title>
+  <meta name="description" content="EcomScrape is a data explorer and analytics dashboard for scraped e-commerce catalogues.">
+  <meta property="og:title" content="EcomScrape - E-commerce Data Explorer & Analytics">
+  <meta property="og:description" content="Explore product data, filter by category and price, and view analytics dashboards.">
+  <meta property="og:type" content="website">
+  <link rel="stylesheet" href="assets/tailwind.css">
+  <link rel="stylesheet" href="assets/custom.css">
 </head>
-<body>
-  <header>
-    <h1>EcomScrape Products</h1>
-    <nav>
-      <a href="./charts.html">Charts</a>
-    </nav>
-  </header>
+<body class="min-h-screen text-white relative overflow-x-hidden bg-[radial-gradient(circle_at_top,_#1a1f3a_0,_#060912_60%)]">
+  <div class="pointer-events-none absolute -top-24 -left-24 w-96 h-96 rounded-full bg-primary/30 blur-3xl"></div>
+  <div class="pointer-events-none absolute bottom-0 right-0 w-[28rem] h-[28rem] rounded-full bg-accentTo/20 blur-3xl"></div>
+  <div class="flex min-h-screen relative z-10">
+    <aside class="relative flex flex-col h-screen w-56 bg-white/10 backdrop-blur-xl border-r border-white/10 shadow-[0_0_25px_rgba(0,0,0,0.4)] p-5 gap-4 sticky top-0 overflow-hidden">
+      <div class="absolute left-0 top-0 h-full w-[1px] bg-white/10"></div>
+      <div class="flex items-center gap-3 text-xl font-bold">
+        EcomScrape
+      </div>
+      <nav class="flex flex-col gap-2 text-sm">
+        <a class="relative flex items-center gap-3 px-4 py-2 rounded-xl text-white hover:bg-white/10 hover:text-white transition bg-primary/40 shadow-[0_0_20px_rgba(58,123,255,0.45)] before:absolute before:inset-0 before:rounded-xl before:bg-primary/20 before:blur-xl before:-z-10" href="index.html">Home</a>
+        <a class="relative flex items-center gap-3 px-4 py-2 rounded-xl text-white/75 hover:bg-white/10 hover:text-white transition" href="products.html">Products</a>
+        <a class="relative flex items-center gap-3 px-4 py-2 rounded-xl text-white/75 hover:bg-white/10 hover:text-white transition" href="analytics.html">Analytics</a>
+      </nav>
+      <div class="mt-auto flex flex-col gap-3"></div>
+    </aside>
 
-  <div class="card" style="margin-bottom:16px;">
-    <div class="controls">
-      <div>
-        <label for="minPrice">Min price</label>
-        <input type="number" id="minPrice" step="0.01" placeholder="e.g. 5" />
+    <main class="flex-1 p-6 lg:p-10 overflow-y-auto">
+      <div class="max-w-6xl mx-auto space-y-12">
+        <section class="bg-white/15 backdrop-blur-xl border border-white/30 rounded-3xl shadow-[0_20px_60px_rgba(0,0,0,0.55)] p-8 lg:p-10 hover:shadow-[0_0_20px_rgba(58,123,255,0.45)] transition glass-topline">
+          <h1 class="text-4xl font-bold tracking-tight mb-3">EcomScrape - E-commerce Data Explorer & Analytics</h1>
+          <p class="text-sm text-white/75 max-w-2xl mb-6">Config-driven scraping of BooksToScrape with ready-to-use analytics and product exploration.</p>
+          <div class="flex flex-wrap gap-3">
+            <a href="products.html" class="inline-flex items-center justify-center px-5 py-3 rounded-full bg-gradient-to-r from-primary to-primaryHover text-white font-semibold shadow-lg shadow-primary/40 hover:shadow-primary/70 hover:scale-[1.02] transition focus:outline-none focus:ring-2 focus:ring-primary/60">Explore Products</a>
+            <a href="analytics.html" class="inline-flex items-center justify-center px-5 py-3 rounded-full border border-white/30 bg-white/5 text-white hover:bg-white/10 transition focus:outline-none focus:ring-2 focus:ring-primary/60">Open Analytics Dashboard</a>
+          </div>
+        </section>
+        <div class="h-px bg-white/10 mt-2 mb-2"></div>
+
+        <section>
+          <h2 class="text-2xl font-semibold mt-10 mb-4">How it works</h2>
+          <div class="grid gap-6 md:grid-cols-3">
+            <div class="bg-white/10 backdrop-blur-md border border-white/20 rounded-2xl shadow-[0_12px_35px_rgba(0,0,0,0.35)] p-5 hover:shadow-[0_0_20px_rgba(58,123,255,0.45)] hover:-translate-y-[1px] transition glass-topline">
+              <div class="text-xl mb-2">1</div>
+              <h3 class="font-semibold mb-2">Scrape</h3>
+              <p class="text-sm text-white/80 leading-relaxed">Config-driven Requests + BeautifulSoup crawl the BooksToScrape catalogue with images, ratings, and links.</p>
+            </div>
+            <div class="bg-white/10 backdrop-blur-md border border-white/20 rounded-2xl shadow-[0_12px_35px_rgba(0,0,0,0.35)] p-5 hover:shadow-[0_0_20px_rgba(58,123,255,0.45)] hover:-translate-y-[1px] transition glass-topline">
+              <div class="text-xl mb-2">2</div>
+              <h3 class="font-semibold mb-2">Clean</h3>
+              <p class="text-sm text-white/80 leading-relaxed">Normalise prices, ratings, and availability into a structured dataset for export.</p>
+            </div>
+            <div class="bg-white/10 backdrop-blur-md border border-white/20 rounded-2xl shadow-[0_12px_35px_rgba(0,0,0,0.35)] p-5 hover:shadow-[0_0_20px_rgba(58,123,255,0.45)] hover:-translate-y-[1px] transition glass-topline">
+              <div class="text-xl mb-2">3</div>
+              <h3 class="font-semibold mb-2">Explore</h3>
+              <p class="text-sm text-white/80 leading-relaxed">Static Tailwind + ApexCharts UI for filtering, sorting, and analytics.</p>
+            </div>
+          </div>
+        </section>
+
+        <section>
+          <h2 class="text-2xl font-semibold mt-10 mb-4">Dataset overview</h2>
+          <div class="grid gap-4 md:grid-cols-5">
+            <div class="bg-white/10 backdrop-blur-xl border border-white/20 rounded-2xl shadow-[0_12px_35px_rgba(0,0,0,0.35)] p-4 hover:shadow-[0_0_20px_rgba(58,123,255,0.45)] transition glass-topline">
+              <div class="text-xs uppercase tracking-wide text-white/60">Products</div>
+              <div id="kpiCount" class="text-3xl font-semibold mt-1 text-neon">-</div>
+            </div>
+            <div class="bg-white/10 backdrop-blur-xl border border-white/20 rounded-2xl shadow-[0_12px_35px_rgba(0,0,0,0.35)] p-4 hover:shadow-[0_0_20px_rgba(58,123,255,0.45)] transition glass-topline">
+              <div class="text-xs uppercase tracking-wide text-white/60">Min price</div>
+              <div id="kpiMin" class="text-3xl font-semibold mt-1 text-neon">-</div>
+            </div>
+            <div class="bg-white/10 backdrop-blur-xl border border-white/20 rounded-2xl shadow-[0_12px_35px_rgba(0,0,0,0.35)] p-4 hover:shadow-[0_0_20px_rgba(58,123,255,0.45)] transition glass-topline">
+              <div class="text-xs uppercase tracking-wide text-white/60">Median price</div>
+              <div id="kpiMedian" class="text-3xl font-semibold mt-1 text-neon">-</div>
+            </div>
+            <div class="bg-white/10 backdrop-blur-xl border border-white/20 rounded-2xl shadow-[0_12px_35px_rgba(0,0,0,0.35)] p-4 hover:shadow-[0_0_20px_rgba(58,123,255,0.45)] transition glass-topline">
+              <div class="text-xs uppercase tracking-wide text-white/60">Max price</div>
+              <div id="kpiMax" class="text-3xl font-semibold mt-1 text-neon">-</div>
+            </div>
+            <div class="bg-white/10 backdrop-blur-xl border border-white/20 rounded-2xl shadow-[0_12px_35px_rgba(0,0,0,0.35)] p-4 hover:shadow-[0_0_20px_rgba(58,123,255,0.45)] transition glass-topline">
+              <div class="text-xs uppercase tracking-wide text-white/60">Categories</div>
+              <div id="kpiCats" class="text-3xl font-semibold mt-1 text-neon">-</div>
+            </div>
+          </div>
+          <p id="generatedAt" class="text-textSecondary text-sm mt-2"></p>
+        </section>
+
+        <section>
+          <h2 class="text-2xl font-semibold mt-10 mb-4">Tech stack</h2>
+          <div class="flex flex-wrap gap-2">
+            <span class="inline-flex items-center px-2 py-1 rounded-full bg-white/5 border border-white/10 text-[0.7rem] text-white/70 hover:bg-white/10">Python</span>
+            <span class="inline-flex items-center px-2 py-1 rounded-full bg-white/5 border border-white/10 text-[0.7rem] text-white/70 hover:bg-white/10">Requests</span>
+            <span class="inline-flex items-center px-2 py-1 rounded-full bg-white/5 border border-white/10 text-[0.7rem] text-white/70 hover:bg-white/10">BeautifulSoup4</span>
+            <span class="inline-flex items-center px-2 py-1 rounded-full bg-white/5 border border-white/10 text-[0.7rem] text-white/70 hover:bg-white/10">Pandas</span>
+            <span class="inline-flex items-center px-2 py-1 rounded-full bg-white/5 border border-white/10 text-[0.7rem] text-white/70 hover:bg-white/10">FastAPI</span>
+            <span class="inline-flex items-center px-2 py-1 rounded-full bg-white/5 border border-white/10 text-[0.7rem] text-white/70 hover:bg-white/10">Tailwind CSS</span>
+            <span class="inline-flex items-center px-2 py-1 rounded-full bg-white/5 border border-white/10 text-[0.7rem] text-white/70 hover:bg-white/10">ApexCharts</span>
+          </div>
+        </section>
       </div>
-      <div>
-        <label for="maxPrice">Max price</label>
-        <input type="number" id="maxPrice" step="0.01" placeholder="e.g. 50" />
-      </div>
-      <div>
-        <label for="category">Category</label>
-        <select id="category">
-          <option value="">All categories</option>
-        </select>
-      </div>
-      <div class="actions">
-        <button id="loadBtn" class="primary">Load products</button>
-        <button id="resetBtn" class="secondary">Reset filters</button>
-      </div>
-    </div>
-    <div class="meta">
-      <span id="dataInfo"></span>
-      <span id="generatedAt"></span>
-    </div>
+    </main>
   </div>
 
-  <div id="message" class="message" style="display:none;"></div>
+  <script type="module">
+    import { loadDataset, humanDate, priceValue } from "./assets/ui.js";
+    import "./assets/state.js";
 
-  <table id="productsTable" style="display:none;">
-    <thead>
-      <tr>
-        <th>Title</th>
-        <th>Category</th>
-        <th>Price</th>
-        <th>Rating</th>
-        <th>Availability</th>
-      </tr>
-    </thead>
-    <tbody></tbody>
-  </table>
+    const kpiCount = document.getElementById("kpiCount");
+    const kpiMin = document.getElementById("kpiMin");
+    const kpiMedian = document.getElementById("kpiMedian");
+    const kpiMax = document.getElementById("kpiMax");
+    const kpiCats = document.getElementById("kpiCats");
+    const gen = document.getElementById("generatedAt");
 
-  <script>
-    const categorySelect = document.getElementById('category');
-    const minPriceInput = document.getElementById('minPrice');
-    const maxPriceInput = document.getElementById('maxPrice');
-    const messageBox = document.getElementById('message');
-    const dataInfo = document.getElementById('dataInfo');
-    const generatedAt = document.getElementById('generatedAt');
-    const table = document.getElementById('productsTable');
-    const tbody = table.querySelector('tbody');
-
-    function formatPrice(p) {
-      return p.price_current ?? p.price_original ?? '-';
+    function median(values) {
+      if (!values.length) return null;
+      const sorted = [...values].sort((a, b) => a - b);
+      const mid = Math.floor(sorted.length / 2);
+      return sorted.length % 2 ? sorted[mid] : (sorted[mid - 1] + sorted[mid]) / 2;
     }
 
-    function setMessage(text) {
-      messageBox.style.display = text ? 'block' : 'none';
-      messageBox.textContent = text;
+    function normaliseCategoryValue(value) {
+      const raw = String(value || "").trim();
+      if (!raw) return "unknown";
+      const lower = raw.toLowerCase();
+      if (lower === "default" || lower === "add a comment") return "Other";
+      return raw;
     }
 
-    function populateCategories(products) {
-      const cats = [...new Set(products.map(p => p.category || 'unknown'))].sort();
-      categorySelect.innerHTML = '<option value="">All categories</option>';
-      cats.forEach(cat => {
-        const opt = document.createElement('option');
-        opt.value = cat;
-        opt.textContent = cat;
-        categorySelect.appendChild(opt);
-      });
-    }
-
-    async function fetchProducts() {
-      const res = await fetch("./datasets/latest_products.json");
-      if (!res.ok) throw new Error("Failed to load product dataset");
-      const raw = await res.json();
-
-      let products = Array.isArray(raw) ? raw : (raw.products ?? []);
-      let generatedAtValue = raw.generated_at ?? null;
-
-      const min = parseFloat(minPriceInput.value);
-      const max = parseFloat(maxPriceInput.value);
-      const cat = categorySelect.value;
-
-      if (!isNaN(min)) products = products.filter(p => formatPrice(p) >= min);
-      if (!isNaN(max)) products = products.filter(p => formatPrice(p) <= max);
-      if (cat) products = products.filter(p => p.category === cat);
-
-      return { products, generated_at: generatedAtValue };
-    }
-
-    function render(products, meta) {
-      tbody.innerHTML = '';
-
-      if (products.length === 0) {
-        setMessage("No products match your filters.");
-        table.style.display = "none";
-        return;
-      }
-
-      setMessage('');
-      table.style.display = "table";
-
-      products.forEach(p => {
-        const tr = document.createElement('tr');
-        tr.innerHTML = `
-          <td>${p.title || ''}</td>
-          <td>${p.category || 'unknown'}</td>
-          <td>${formatPrice(p)}</td>
-          <td>${p.rating ?? '-'}</td>
-          <td>${p.availability ?? '-'}</td>
-        `;
-        tbody.appendChild(tr);
-      });
-
-      dataInfo.textContent = `${products.length} product(s)`;
-      generatedAt.textContent = meta.generated_at ? `Generated at: ${meta.generated_at}` : '';
-    }
-
-    async function loadAndRender(initial = false) {
+    async function init() {
       try {
-        const data = await fetchProducts();
-        if (initial) populateCategories(data.products);
-        render(data.products, data);
+        const { products, generated_at } = await loadDataset();
+        const prices = products.map(priceValue).filter(v => v !== null);
+        kpiCount.textContent = products.length;
+        kpiMin.textContent = prices.length ? Math.min(...prices).toFixed(2) : "-";
+        kpiMedian.textContent = prices.length ? median(prices).toFixed(2) : "-";
+        kpiMax.textContent = prices.length ? Math.max(...prices).toFixed(2) : "-";
+        const cats = [...new Set(products.map(p => normaliseCategoryValue(p.category)))];
+        kpiCats.textContent = cats.length;
+        gen.textContent = generated_at ? `Dataset generated: ${humanDate(generated_at)}` : "";
       } catch (err) {
-        setMessage(err.message);
-        table.style.display = "none";
+        gen.textContent = err.message;
       }
     }
-
-    document.getElementById('loadBtn').addEventListener('click', () => loadAndRender(false));
-    document.getElementById('resetBtn').addEventListener('click', () => {
-      minPriceInput.value = '';
-      maxPriceInput.value = '';
-      categorySelect.value = '';
-      loadAndRender(false);
-    });
-
-    loadAndRender(true);
+    init();
   </script>
 </body>
 </html>

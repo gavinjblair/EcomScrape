@@ -1,0 +1,201 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+  <meta charset="UTF-8">
+  <meta name="viewport" content="width=device-width, initial-scale=1.0">
+  <title>EcomScrape - Product Details</title>
+  <meta name="description" content="Detailed product view with pricing, rating, availability, and related items.">
+  <meta property="og:title" content="EcomScrape - Product Details">
+  <meta property="og:description" content="View product details, pricing, and related recommendations.">
+  <meta property="og:type" content="website">
+  <link rel="stylesheet" href="assets/tailwind.css">
+  <link rel="stylesheet" href="assets/custom.css">
+</head>
+<body class="min-h-screen text-white relative overflow-x-hidden bg-[radial-gradient(circle_at_top,_#1a1f3a_0,_#060912_60%)]">
+  <div class="pointer-events-none absolute -top-24 -left-24 w-96 h-96 rounded-full bg-primary/30 blur-3xl"></div>
+  <div class="pointer-events-none absolute bottom-0 right-0 w-[28rem] h-[28rem] rounded-full bg-accentTo/20 blur-3xl"></div>
+  <div class="flex min-h-screen relative z-10">
+    <aside class="relative flex flex-col h-screen w-56 bg-white/10 backdrop-blur-xl border-r border-white/10 shadow-[0_0_25px_rgba(0,0,0,0.4)] p-5 gap-4 sticky top-0 overflow-hidden">
+      <div class="absolute left-0 top-0 h-full w-[1px] bg-white/10"></div>
+      <div class="flex items-center gap-3 text-xl font-bold">EcomScrape</div>
+      <nav class="flex flex-col gap-2 text-sm">
+        <a class="relative flex items-center gap-3 px-4 py-2 rounded-xl text-white/75 hover:bg-white/10 hover:text-white transition" href="index.html">Home</a>
+        <a class="relative flex items-center gap-3 px-4 py-2 rounded-xl text-white/75 hover:bg-white/10 hover:text-white transition" href="products.html">Products</a>
+        <a class="relative flex items-center gap-3 px-4 py-2 rounded-xl text-white/75 hover:bg-white/10 hover:text-white transition" href="analytics.html">Analytics</a>
+      </nav>
+      <div class="mt-auto flex flex-col gap-3"></div>
+    </aside>
+
+    <main class="flex-1 p-6 lg:p-10 overflow-y-auto">
+      <div id="status" class="message text-sm text-warning mb-4 hidden"></div>
+
+      <section id="details" class="max-w-5xl mx-auto mt-10 mb-12 bg-white/15 backdrop-blur-xl border border-white/25 rounded-3xl p-10 shadow-[0_20px_60px_rgba(0,0,0,0.55)] hover:shadow-[0_0_20px_rgba(58,123,255,0.45)] transition space-y-8 glass-topline hidden">
+        <div class="grid gap-10 lg:grid-cols-[minmax(0,1fr)_minmax(0,1.2fr)]">
+          <div class="bg-white/10 backdrop-blur-md border border-white/20 rounded-2xl p-4 shadow-[0_0_30px_rgba(0,0,0,0.7)] flex justify-center items-center glass-topline">
+            <img id="productImage" alt="Product image" class="w-full max-w-[320px] rounded-2xl object-contain bg-white/10 border border-white/20 shadow-[0_12px_35px_rgba(0,0,0,0.35)]" />
+          </div>
+          <div class="space-y-4">
+            <div id="categoryPill" class="inline-flex items-center px-3 py-1 rounded-full text-xs font-medium bg-gradient-to-r from-accentFrom to-accentTo text-white">Category</div>
+            <h1 class="text-4xl font-bold mb-2" id="title"></h1>
+            <div class="text-3xl font-bold text-neon" id="price">-</div>
+            <div class="text-sm" id="ratingStars"></div>
+            <div id="availability"></div>
+            <div>
+              <div class="text-xs uppercase tracking-wide text-white/40 mb-1">Description</div>
+              <p id="description" class="text-sm leading-relaxed text-white/80">No description provided.</p>
+            </div>
+            <a id="productLink" class="inline-flex items-center justify-center px-8 py-3 rounded-full bg-gradient-to-r from-primary to-primaryHover text-white font-semibold shadow-lg shadow-primary/40 hover:shadow-primary/80 hover:scale-[1.03] transition focus:outline-none focus:ring-2 focus:ring-primary/60 w-full hidden" href="#" target="_blank" rel="noopener noreferrer">Open on BooksToScrape</a>
+          </div>
+        </div>
+      </section>
+
+      <section class="max-w-5xl mx-auto" id="relatedSection" style="display:none;">
+        <h2 class="text-2xl font-semibold mt-10 mb-4">You might also like</h2>
+        <div class="grid gap-4 md:grid-cols-2 xl:grid-cols-4" id="relatedGrid"></div>
+      </section>
+    </main>
+  </div>
+
+  <script type="module">
+    import { loadDataset, priceValue, showError, showEmpty, availabilityBadgeElement } from "./assets/ui.js";
+    import "./assets/state.js";
+
+    function findProduct(products, id) {
+      if (!id) return { product: products[0], index: 0 };
+      let idx = products.findIndex(p => String(p.id || "").toLowerCase() === String(id || "").toLowerCase());
+      if (idx === -1) idx = products.findIndex((p, i) => String(i) === String(id));
+      if (idx === -1) idx = 0;
+      return { product: products[idx], index: idx };
+    }
+
+    function normaliseCategoryValue(value) {
+      const raw = String(value || "").trim();
+      if (!raw) return "unknown";
+      const lower = raw.toLowerCase();
+      if (lower === "default" || lower === "add a comment") return "Other";
+      return raw;
+    }
+
+    function showStatus(text) {
+      const el = document.getElementById('status');
+      el.textContent = text;
+      el.classList.toggle("hidden", !text);
+    }
+
+    function renderStars(rating) {
+      const r = Number(rating) || 0;
+      const full = Math.round(r);
+      const filled = "*".repeat(Math.min(full, 5));
+      const empty = ".".repeat(Math.max(0, 5 - full));
+      return `${filled}${empty} (${r || "-"})`;
+    }
+
+    function renderProduct(product) {
+      const details = document.getElementById('details');
+      details.classList.remove("hidden");
+      document.getElementById('title').textContent = product.title || product.name || 'Product';
+      document.getElementById('categoryPill').textContent = normaliseCategoryValue(product.category);
+      const price = priceValue(product);
+      document.getElementById('price').textContent = Number.isFinite(price) ? `GBP ${price.toFixed(2)}` : '-';
+      document.getElementById('ratingStars').textContent = renderStars(product.rating);
+      const availability = document.getElementById("availability");
+      availability.innerHTML = "";
+      if (product.availability) {
+        availability.appendChild(availabilityBadgeElement(product.availability));
+      }
+      document.getElementById('description').textContent = product.description || 'No description provided.';
+
+      const img = document.getElementById('productImage');
+      if (product.image_url) {
+        img.src = product.image_url;
+        img.alt = product.title || "Product image";
+        img.loading = "lazy";
+        img.decoding = "async";
+        img.style.display = "block";
+      } else {
+        img.style.display = 'none';
+      }
+
+      if (product.product_url) {
+        const link = document.getElementById("productLink");
+        link.href = product.product_url;
+        link.classList.remove("hidden");
+      }
+    }
+
+    function renderRelated(products, currentIndex, category) {
+      const relatedSection = document.getElementById("relatedSection");
+      const grid = document.getElementById("relatedGrid");
+      const list = products.filter((p, idx) => idx !== currentIndex && normaliseCategoryValue(p.category) === normaliseCategoryValue(category)).slice(0, 4);
+      if (!list.length) {
+        relatedSection.style.display = "none";
+        return;
+      }
+      relatedSection.style.display = "block";
+      grid.innerHTML = "";
+      list.forEach((p) => {
+        const price = priceValue(p);
+        const card = document.createElement("div");
+        card.className = "related-card bg-white/10 backdrop-blur-xl border border-white/20 rounded-2xl shadow-[0_12px_35px_rgba(0,0,0,0.35)] p-3 flex gap-3 items-center glass-topline";
+
+        const img = document.createElement("img");
+        img.src = p.image_url || "";
+        img.alt = p.title || "";
+        img.loading = "lazy";
+        img.decoding = "async";
+        img.className = "w-16 h-16 object-cover rounded-lg bg-white/10";
+        img.addEventListener("error", () => {
+          img.style.display = "none";
+        });
+
+        const body = document.createElement("div");
+        body.className = "space-y-1";
+
+        const title = document.createElement("div");
+        title.className = "font-semibold text-sm line-clamp-2";
+        title.textContent = p.title || "-";
+
+        const category = document.createElement("div");
+        category.className = "text-xs text-textSecondary";
+        category.textContent = normaliseCategoryValue(p.category);
+
+        const priceEl = document.createElement("div");
+        priceEl.className = "font-bold text-sm";
+        priceEl.textContent = Number.isFinite(price) ? `GBP ${price.toFixed(2)}` : "-";
+
+        const link = document.createElement("a");
+        const productId = p.id ?? products.indexOf(p);
+        link.href = `product_details.html?id=${encodeURIComponent(productId)}`;
+        link.className = "text-primary text-xs";
+        link.textContent = "View";
+
+        body.append(title, category, priceEl, link);
+        card.append(img, body);
+        grid.appendChild(card);
+      });
+    }
+
+    async function init() {
+      const idParam = new URLSearchParams(window.location.search).get('id');
+      try {
+        const data = await loadDataset();
+        if (!data.products.length) {
+          showEmpty(document.querySelector("main"), "Product not found", "No products found in dataset.", "Back to products", () => window.location.href = "products.html");
+          return;
+        }
+        const { product, index } = findProduct(data.products, idParam);
+        if (!product) {
+          showEmpty(document.querySelector("main"), "Product not found", "Try returning to the catalogue.", "Back to products", () => window.location.href = "products.html");
+          return;
+        }
+        renderProduct(product);
+        renderRelated(data.products, index, product.category);
+      } catch (err) {
+        showError(document.querySelector("main"), err.message);
+      }
+    }
+
+    init();
+  </script>
+</body>
+</html>

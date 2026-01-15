@@ -1,5 +1,5 @@
 site_name: "books_toscrape"
-base_url: "https://books.toscrape.com/"
+base_url: "https://books.toscrape.com/catalogue/"
 start_urls:
   - "https://books.toscrape.com/catalogue/category/books_1/index.html"
 currency: "GBP"
@@ -20,7 +20,7 @@ request:
 pagination:
   mode: "link"
   next_selector: "li.next a"
-  max_pages: 3
+  max_pages: 50
 
 cleaning:
   rating_words:
@@ -54,4 +54,8 @@ parsing:
     image_url:
       selector: "div.image_container img"
       attribute: "src"
+      join_base_url: true
+    product_url:
+      selector: "h3 a"
+      attribute: "href"
       join_base_url: true

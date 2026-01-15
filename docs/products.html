@@ -1,0 +1,1158 @@
+<!DOCTYPE html>
+
+
+<html lang="en">
+
+
+<head>
+
+
+  <meta charset="UTF-8">
+
+
+  <meta name="viewport" content="width=device-width, initial-scale=1.0">
+
+
+  <title>EcomScrape | Products</title>
+  <meta name="description" content="Browse and filter the EcomScrape product catalogue with pricing, ratings, and availability.">
+  <meta property="og:title" content="EcomScrape - Products Explorer">
+  <meta property="og:description" content="Explore the product catalogue with filters, sorting, and saved views.">
+  <meta property="og:type" content="website">
+
+
+  <link rel="stylesheet" href="assets/tailwind.css">
+
+
+  <link rel="stylesheet" href="assets/custom.css">
+</head>
+
+
+<body class="min-h-screen text-white relative overflow-x-hidden bg-[radial-gradient(circle_at_top,_#1a1f3a_0,_#060912_60%)]">
+
+
+  <div class="pointer-events-none absolute -top-24 -left-24 w-96 h-96 rounded-full bg-primary/30 blur-3xl"></div>
+
+
+  <div class="pointer-events-none absolute bottom-0 right-0 w-[28rem] h-[28rem] rounded-full bg-accentTo/20 blur-3xl"></div>
+
+
+  <div class="flex min-h-screen relative z-10">
+
+
+    <aside class="relative flex flex-col h-screen w-56 bg-white/10 backdrop-blur-xl border-r border-white/10 shadow-[0_0_25px_rgba(0,0,0,0.4)] p-5 gap-4 sticky top-0 overflow-hidden">
+
+
+      <div class="absolute left-0 top-0 h-full w-[1px] bg-white/10"></div>
+
+
+      <div class="flex items-center gap-3 text-xl font-bold">EcomScrape</div>
+
+
+      <nav class="flex flex-col gap-2 text-sm">
+
+
+        <a class="relative flex items-center gap-3 px-4 py-2 rounded-xl text-white/75 hover:bg-white/10 hover:text-white transition" href="index.html">Home</a>
+
+
+        <a class="relative flex items-center gap-3 px-4 py-2 rounded-xl bg-primary/40 text-white shadow-[0_0_20px_rgba(58,123,255,0.45)] before:absolute before:inset-0 before:rounded-xl before:bg-primary/20 before:blur-xl before:-z-10" href="products.html">Products</a>
+
+
+        <a class="relative flex items-center gap-3 px-4 py-2 rounded-xl text-white/75 hover:bg-white/10 hover:text-white transition" href="analytics.html">Analytics</a>
+
+
+      </nav>
+
+
+      <div class="mt-auto flex flex-col gap-3"></div>
+
+
+    </aside>
+
+
+
+
+
+    <main class="flex-1 p-6 lg:p-10 overflow-y-auto">
+
+
+      <div class="max-w-6xl mx-auto space-y-10">
+
+
+        <div class="grid gap-6 lg:grid-cols-[320px,1fr]">
+
+
+          <aside class="bg-white/10 backdrop-blur-md border border-white/20 rounded-2xl shadow-[0_12px_35px_rgba(0,0,0,0.35)] p-5 hover:shadow-[0_0_20px_rgba(58,123,255,0.45)] hover:-translate-y-[1px] transition glass-topline">
+
+
+            <div class="text-2xl font-semibold mb-4">Filters</div>
+
+
+            <div class="space-y-4">
+
+
+              <div>
+
+
+                <label class="text-xs text-textSecondary">Min price</label>
+
+
+                <input type="number" id="minPrice" step="0.01" aria-label="Minimum price" class="w-full bg-white/5 border border-white/20 rounded-lg px-3 py-2 text-sm placeholder:text-textSecondary/60 focus:outline-none focus:ring-2 focus:ring-primary/60">
+
+
+              </div>
+
+
+              <div>
+
+
+                <label class="text-xs text-textSecondary">Max price</label>
+
+
+                <input type="number" id="maxPrice" step="0.01" aria-label="Maximum price" class="w-full bg-white/5 border border-white/20 rounded-lg px-3 py-2 text-sm placeholder:text-textSecondary/60 focus:outline-none focus:ring-2 focus:ring-primary/60">
+
+
+              </div>
+
+
+              <div>
+
+
+                <label class="text-xs text-textSecondary">Category</label>
+
+
+                <select id="category" aria-label="Category" class="select-dark w-full bg-white/5 border border-white/20 rounded-lg px-3 py-2 text-sm focus:outline-none focus:ring-2 focus:ring-primary/60"></select>
+              </div>
+
+
+              <div>
+
+
+                <label class="text-xs text-textSecondary">Min rating</label>
+
+
+                <input type="number" id="minRating" min="0" max="5" step="0.5" aria-label="Minimum rating" class="w-full bg-white/5 border border-white/20 rounded-lg px-3 py-2 text-sm placeholder:text-textSecondary/60 focus:outline-none focus:ring-2 focus:ring-primary/60">
+
+
+              </div>
+
+
+              <div>
+
+
+                <label class="text-xs text-textSecondary">Availability</label>
+
+
+                <select id="availability" aria-label="Availability" class="select-dark w-full bg-white/5 border border-white/20 rounded-lg px-3 py-2 text-sm focus:outline-none focus:ring-2 focus:ring-primary/60">
+                  <option value="">All</option>
+
+
+                  <option value="in_stock">In stock</option>
+
+
+                </select>
+
+
+              </div>
+
+
+              <div>
+
+
+                <label class="text-xs text-textSecondary">Sort</label>
+
+
+                <select id="sort" aria-label="Sort order" class="select-dark w-full bg-white/5 border border-white/20 rounded-lg px-3 py-2 text-sm focus:outline-none focus:ring-2 focus:ring-primary/60">
+                  <option value="title_asc">Title A-Z</option>
+
+
+                  <option value="title_desc">Title Z-A</option>
+
+
+                  <option value="price_asc">Price (asc)</option>
+
+
+                  <option value="price_desc">Price (desc)</option>
+
+
+                  <option value="rating_desc">Rating (desc)</option>
+
+
+                </select>
+
+
+              </div>
+
+
+              <div class="flex gap-2 pt-2">
+
+
+                <button class="inline-flex flex-1 items-center justify-center px-3 py-2 rounded-full bg-gradient-to-r from-primary to-primaryHover text-white font-semibold shadow-lg shadow-primary/40 hover:shadow-primary/70 hover:scale-[1.02] transition focus:outline-none focus:ring-2 focus:ring-primary/60" id="applyBtn">Apply filters</button>
+
+
+                <button class="inline-flex items-center justify-center px-3 py-2 rounded-full border border-white/30 bg-white/5 text-white hover:bg-white/10 transition focus:outline-none focus:ring-2 focus:ring-primary/60" id="clearBtn">Clear</button>
+
+
+              </div>
+
+
+            </div>
+
+
+          </aside>
+
+
+
+
+
+          <section class="bg-white/15 backdrop-blur-xl border border-white/25 rounded-3xl shadow-[0_20px_60px_rgba(0,0,0,0.55)] p-6 space-y-5 hover:shadow-[0_0_20px_rgba(58,123,255,0.45)] transition glass-topline">
+
+
+            <div class="flex flex-wrap items-center justify-between gap-4">
+
+
+              <div>
+
+
+                <h1 class="text-4xl font-bold tracking-tight mb-1">Products Explorer</h1>
+
+
+                <p id="summary" class="text-sm text-white/75">Loading...</p>
+                <p id="generatedAt" class="text-xs text-white/50"></p>
+              </div>
+
+
+              <div class="flex gap-2">
+
+
+                <button class="inline-flex items-center px-3 py-2 rounded-full border border-white/30 bg-white/5 text-white hover:bg-white/10 transition focus:outline-none focus:ring-2 focus:ring-primary/60" id="viewTable">Table</button>
+
+
+                <button class="inline-flex items-center px-3 py-2 rounded-full border border-white/30 bg-white/5 text-white hover:bg-white/10 transition focus:outline-none focus:ring-2 focus:ring-primary/60" id="viewGrid">Grid</button>
+
+
+              </div>
+
+
+            </div>
+
+
+
+
+
+            <div id="savedViewsBar" class="flex flex-wrap items-center gap-2 mb-4">
+
+
+              <span class="text-xs uppercase tracking-wide text-white/50">Saved views</span>
+
+
+              <button id="saveViewBtn" class="inline-flex items-center px-3 py-1.5 rounded-full border border-white/30 bg-white/5 text-white text-xs hover:bg-white/10 transition focus:outline-none focus:ring-2 focus:ring-primary/60">Save current view</button>
+
+
+              <div id="savedViewsContainer" class="flex flex-wrap items-center gap-2"></div>
+
+
+            </div>
+
+
+
+
+
+            <div id="alertBar" class="hidden"></div>
+
+
+
+
+
+            <div id="tableView" class="bg-white/10 backdrop-blur-xl border border-white/20 rounded-2xl p-4 shadow-2xl glass-topline max-h-[650px] overflow-y-auto">
+              <table class="w-full text-sm">
+
+
+              <thead class="bg-white/10 text-[0.65rem] uppercase tracking-wider text-white/70 sticky top-0 z-10">
+                  <tr class="divide-x divide-white/10">
+
+
+                    <th class="px-3 py-2 text-left">Image</th>
+
+
+                    <th class="px-3 py-2 text-left">Title</th>
+
+
+                    <th class="px-3 py-2 text-left">Category</th>
+
+
+                    <th class="px-3 py-2 text-left">Price</th>
+
+
+                    <th class="px-3 py-2 text-left">Rating</th>
+
+
+                    <th class="px-3 py-2 text-left">Availability</th>
+
+
+                  </tr>
+
+
+                </thead>
+
+
+                <tbody id="tableBody" class="divide-y divide-white/10"></tbody>
+
+
+              </table>
+
+
+            </div>
+
+
+
+
+
+            <div id="gridView" style="display:none;" class="max-h-[650px] overflow-y-auto">
+              <div class="grid gap-6 md:grid-cols-2 xl:grid-cols-3" id="gridBody"></div>
+            </div>
+
+            <div id="paginationBar" class="flex items-center justify-between text-xs text-white/70 pt-4">
+              <button id="prevPage" class="px-3 py-1.5 rounded-full border border-white/30 bg-white/5 text-white hover:bg-white/10 transition focus:outline-none focus:ring-2 focus:ring-primary/60">Prev</button>
+              <span id="pageInfo">Page 1 of 1</span>
+              <button id="nextPage" class="px-3 py-1.5 rounded-full border border-white/30 bg-white/5 text-white hover:bg-white/10 transition focus:outline-none focus:ring-2 focus:ring-primary/60">Next</button>
+            </div>
+          </section>
+
+
+        </div>
+
+
+      </div>
+
+
+    </main>
+
+
+  </div>
+
+
+
+
+
+  <!-- Save view modal -->
+
+
+  <div id="saveViewModal" class="fixed inset-0 bg-black/60 backdrop-blur-sm hidden items-center justify-center z-50">
+
+
+    <div class="bg-white/10 backdrop-blur-xl border border-white/20 rounded-2xl shadow-xl p-6 w-full max-w-md space-y-4">
+
+
+      <h3 class="text-lg font-semibold">Save current view</h3>
+
+
+      <input id="savedViewName" type="text" class="w-full bg-white/5 border border-white/20 rounded-lg px-3 py-2 text-sm focus:outline-none focus:ring-2 focus:ring-primary/60" placeholder="Name your view">
+
+
+      <div class="flex justify-end gap-2">
+
+
+        <button id="cancelSaveView" class="px-4 py-2 rounded-full border border-white/30 bg-white/5 text-white hover:bg-white/10 transition focus:outline-none focus:ring-2 focus:ring-primary/60">Cancel</button>
+
+
+        <button id="confirmSaveView" class="px-4 py-2 rounded-full bg-gradient-to-r from-primary to-primaryHover text-white font-semibold shadow-primary/40 hover:shadow-primary/70 transition focus:outline-none focus:ring-2 focus:ring-primary/60">Save</button>
+
+
+      </div>
+
+
+    </div>
+
+
+  </div>
+
+
+
+
+
+  <script type="module">
+
+
+    import { loadDataset, availabilityBadgeElement, priceValue, showLoading, showError, showEmpty, humanDate } from "./assets/ui.js";
+    import "./assets/state.js";
+
+
+
+
+
+    const minPrice = document.getElementById("minPrice");
+
+
+    const maxPrice = document.getElementById("maxPrice");
+
+
+    const category = document.getElementById("category");
+
+
+    const minRating = document.getElementById("minRating");
+    const availability = document.getElementById("availability");
+    const sort = document.getElementById("sort");
+    const summary = document.getElementById("summary");
+    const generatedAt = document.getElementById("generatedAt");
+    const tableBody = document.getElementById("tableBody");
+    const gridBody = document.getElementById("gridBody");
+    const alertBar = document.getElementById("alertBar");
+
+
+
+    const applyBtn = document.getElementById("applyBtn");
+
+
+    const clearBtn = document.getElementById("clearBtn");
+
+
+    const viewTable = document.getElementById("viewTable");
+
+
+    const viewGrid = document.getElementById("viewGrid");
+    const tableView = document.getElementById("tableView");
+    const gridView = document.getElementById("gridView");
+    const paginationBar = document.getElementById("paginationBar");
+    const prevPage = document.getElementById("prevPage");
+    const nextPage = document.getElementById("nextPage");
+    const pageInfo = document.getElementById("pageInfo");
+
+
+
+    const savedViewsContainer = document.getElementById("savedViewsContainer");
+
+
+    const saveViewBtn = document.getElementById("saveViewBtn");
+
+
+    const saveViewModal = document.getElementById("saveViewModal");
+
+
+    const savedViewName = document.getElementById("savedViewName");
+
+
+    const cancelSaveView = document.getElementById("cancelSaveView");
+
+
+    const confirmSaveView = document.getElementById("confirmSaveView");
+
+
+
+
+
+    const SAVED_VIEWS_KEY = "ecomscrape_saved_views";
+
+
+
+
+
+    const PAGE_SIZE = 25;
+    let currentPage = 1;
+    let allProducts = [];
+    let filtered = [];
+    let savedViews = [];
+
+    function normaliseCategoryValue(value) {
+      const raw = String(value || "").trim();
+      if (!raw) return "unknown";
+      const lower = raw.toLowerCase();
+      if (lower === "default" || lower === "add a comment") return "Other";
+      return raw;
+    }
+
+    function normaliseFilters(state) {
+      return { ...state, category: normaliseCategoryValue(state.category) };
+    }
+
+
+
+
+
+
+    function setControls(state) {
+
+
+      minPrice.value = state.minPrice ?? "";
+
+
+      maxPrice.value = state.maxPrice ?? "";
+
+
+      category.value = normaliseCategoryValue(state.category);
+
+
+      minRating.value = state.minRating ?? "";
+
+
+      availability.value = state.availability ?? "";
+
+
+      sort.value = state.sort ?? "title_asc";
+
+
+    }
+
+
+
+
+
+    function loadSavedViews() {
+
+
+      try {
+
+
+        const raw = localStorage.getItem(SAVED_VIEWS_KEY);
+
+
+        savedViews = raw ? JSON.parse(raw) : [];
+
+
+      } catch {
+
+
+        savedViews = [];
+
+
+      }
+
+
+    }
+
+
+
+
+
+    function persistSavedViews() {
+
+
+      localStorage.setItem(SAVED_VIEWS_KEY, JSON.stringify(savedViews));
+
+
+    }
+
+
+
+
+
+    function renderSavedViews() {
+
+
+      savedViewsContainer.innerHTML = "";
+
+
+      savedViews.forEach((view, idx) => {
+
+
+        const pill = document.createElement("div");
+
+
+        pill.className = "flex items-center gap-2 px-3 py-1.5 rounded-full bg-white/10 border border-white/20 text-xs text-white shadow-[0_0_12px_rgba(0,0,0,0.25)]";
+
+
+        const btn = document.createElement("button");
+
+
+        btn.textContent = view.name;
+
+
+        btn.className = "hover:underline";
+
+
+        btn.addEventListener("click", () => applySavedView(view));
+
+
+        const del = document.createElement("button");
+
+
+        del.textContent = "x";
+
+
+        del.className = "text-white/60 hover:text-white";
+
+
+        del.addEventListener("click", () => deleteSavedView(idx));
+
+
+        pill.appendChild(btn);
+
+
+        pill.appendChild(del);
+
+
+        savedViewsContainer.appendChild(pill);
+
+
+      });
+
+
+    }
+
+
+
+
+
+    function openSaveModal() {
+
+
+      savedViewName.value = "";
+
+
+      saveViewModal.classList.remove("hidden");
+
+
+      saveViewModal.classList.add("flex");
+
+
+      savedViewName.focus();
+
+
+    }
+
+
+
+
+
+    function closeSaveModal() {
+
+
+      saveViewModal.classList.add("hidden");
+
+
+      saveViewModal.classList.remove("flex");
+
+
+    }
+
+
+
+
+
+    function saveCurrentView() {
+
+
+      const name = savedViewName.value.trim();
+
+
+      if (!name) return;
+
+
+      const filters = window.EcomState.getFilterState();
+
+
+      savedViews.push({ name, filters });
+
+
+      persistSavedViews();
+
+
+      renderSavedViews();
+
+
+      closeSaveModal();
+
+
+    }
+
+
+
+
+
+    function applySavedView(view) {
+      const normalised = normaliseFilters(view.filters);
+      setControls(normalised);
+      window.EcomState.setFilterState(normalised);
+      applyFiltersAndRender();
+    }
+
+
+
+
+
+    function deleteSavedView(idx) {
+
+
+      savedViews.splice(idx, 1);
+
+
+      persistSavedViews();
+
+
+      renderSavedViews();
+
+
+    }
+
+
+
+
+
+    function skeletonTable() {
+
+
+      return Array.from({ length: 5 }).map(() => `
+
+
+        <tr class="divide-x divide-white/10">
+
+
+          <td class="px-3 py-3"><div class="w-12 h-16 bg-white/5 animate-pulse rounded-xl"></div></td>
+
+
+          <td class="px-3 py-3"><div class="h-4 bg-white/5 animate-pulse rounded"></div></td>
+
+
+          <td class="px-3 py-3"><div class="h-4 bg-white/5 animate-pulse rounded w-20"></div></td>
+
+
+          <td class="px-3 py-3"><div class="h-4 bg-white/5 animate-pulse rounded w-16"></div></td>
+
+
+          <td class="px-3 py-3"><div class="h-4 bg-white/5 animate-pulse rounded w-10"></div></td>
+
+
+          <td class="px-3 py-3"><div class="h-4 bg-white/5 animate-pulse rounded w-16"></div></td>
+
+
+        </tr>
+
+
+      `).join("");
+
+
+    }
+
+
+
+
+
+    function skeletonGrid() {
+
+
+      return Array.from({ length: 6 }).map(() => `
+
+
+        <div class="bg-white/10 border border-white/20 rounded-2xl p-3 animate-pulse h-44"></div>
+
+
+      `).join("");
+
+
+    }
+
+
+
+
+
+    function setLoadingState() {
+
+
+      summary.textContent = "Loading...";
+
+
+      showLoading(tableBody, skeletonTable());
+
+
+      gridBody.innerHTML = skeletonGrid();
+
+
+    }
+
+
+
+
+
+    function showErrorBar(msg) {
+
+
+      alertBar.className = "bg-red-500/10 text-red-200 border border-red-400/50 rounded-xl p-3 text-sm";
+
+
+      alertBar.textContent = msg;
+
+
+      alertBar.classList.remove("hidden");
+
+
+    }
+
+
+
+
+
+    function clearErrorBar() {
+
+
+      alertBar.textContent = "";
+
+
+      alertBar.className = "hidden";
+
+
+    }
+
+
+
+
+
+    function populateCategories(products) {
+
+
+      const cats = [...new Set(products.map(p => normaliseCategoryValue(p.category)))];
+
+
+      cats.sort();
+
+
+      category.innerHTML = '<option value="">All</option>';
+
+
+      cats.forEach(c => {
+
+
+        const opt = document.createElement("option");
+
+
+        opt.value = c;
+
+
+        opt.textContent = c;
+
+
+        category.appendChild(opt);
+
+
+      });
+
+
+    }
+
+
+
+
+
+    function applyFiltersAndRender() {
+      currentPage = 1;
+      const state = window.EcomState.setFilterState({
+        minPrice: minPrice.value,
+        maxPrice: maxPrice.value,
+        category: category.value,
+
+
+        minRating: minRating.value,
+
+
+        availability: availability.value,
+
+
+        sort: sort.value,
+
+
+      });
+
+
+      filtered = window.EcomState.applyFilters(allProducts, state);
+
+
+      filtered = window.EcomState.applySorting(filtered, state.sort);
+
+
+      render();
+
+
+    }
+
+
+
+
+
+    function clearFilters() {
+      const state = window.EcomState.clearFilterState();
+      setControls(state);
+      currentPage = 1;
+      filtered = [...allProducts];
+      render();
+    }
+
+
+
+    function renderTable(list) {
+      if (!list.length) {
+        showEmpty(tableBody, "No products match these filters", "Try adjusting your filters.", "Clear filters", clearFilters);
+        return;
+      }
+
+      tableBody.innerHTML = "";
+
+      list.forEach((p) => {
+        const productIndex = allProducts.indexOf(p);
+        const productId = p.id ?? productIndex;
+        const tr = document.createElement("tr");
+        tr.className = "divide-x divide-white/10 hover:bg-white/5 hover:shadow-[0_0_16px_rgba(0,0,0,0.6)] hover:-translate-y-[1px] transition";
+
+        const imgTd = document.createElement("td");
+        imgTd.className = "px-3 py-3";
+        if (p.image_url) {
+          const img = document.createElement("img");
+          img.src = p.image_url;
+          img.alt = p.title || "Product image";
+          img.loading = "lazy";
+          img.decoding = "async";
+          img.className = "w-12 h-16 object-cover rounded-xl border border-white/20 shadow-lg shadow-black/40";
+          imgTd.appendChild(img);
+        } else {
+          const placeholder = document.createElement("div");
+          placeholder.className = "w-12 h-16 bg-white/10 rounded-xl";
+          imgTd.appendChild(placeholder);
+        }
+
+        const titleTd = document.createElement("td");
+        titleTd.className = "px-3 py-3 font-semibold";
+        const link = document.createElement("a");
+        link.href = `product_details.html?id=${encodeURIComponent(productId)}`;
+        link.className = "hover:underline";
+        link.textContent = p.title || "-";
+        titleTd.appendChild(link);
+
+        const catTd = document.createElement("td");
+        catTd.className = "px-3 py-3";
+        const chip = document.createElement("span");
+        chip.className = "inline-flex items-center px-2 py-1 rounded-full text-[0.7rem] font-medium bg-gradient-to-r from-accentFrom to-accentTo text-white/95";
+        chip.textContent = p.category || "unknown";
+        catTd.appendChild(chip);
+
+        const priceTd = document.createElement("td");
+        priceTd.className = "px-3 py-3";
+        const price = priceValue(p);
+        priceTd.textContent = Number.isFinite(price) ? `GBP ${price.toFixed(2)}` : "-";
+
+        const ratingTd = document.createElement("td");
+        ratingTd.className = "px-3 py-3";
+        ratingTd.textContent = p.rating ?? "-";
+
+        const availTd = document.createElement("td");
+        availTd.className = "px-3 py-3";
+        availTd.appendChild(availabilityBadgeElement(p.availability));
+
+        tr.append(imgTd, titleTd, catTd, priceTd, ratingTd, availTd);
+        tableBody.appendChild(tr);
+      });
+    }
+
+
+
+
+
+    function renderGrid(list) {
+      if (!list.length) {
+        showEmpty(gridBody, "No products match these filters", "Try adjusting your filters.", "Clear filters", clearFilters);
+        return;
+      }
+
+      gridBody.innerHTML = "";
+
+      list.forEach((p) => {
+        const productIndex = allProducts.indexOf(p);
+        const productId = p.id ?? productIndex;
+        const price = priceValue(p);
+
+        const card = document.createElement("div");
+        card.className = "product-card bg-white/10 backdrop-blur-md border border-white/20 rounded-2xl shadow-xl shadow-black/50 overflow-hidden flex flex-col hover:-translate-y-[2px] hover:shadow-[0_12px_30px_rgba(0,0,0,0.45)] transition-all duration-200 glass-topline";
+
+        const imageWrap = document.createElement("div");
+        imageWrap.className = "relative rounded-2xl overflow-hidden shadow-lg shadow-black/60";
+        if (p.image_url) {
+          const img = document.createElement("img");
+          img.src = p.image_url;
+          img.alt = p.title || "Product image";
+          img.loading = "lazy";
+          img.decoding = "async";
+          img.className = "w-full h-44 object-cover bg-white/10";
+          img.addEventListener("error", () => {
+            img.style.display = "none";
+          });
+          imageWrap.appendChild(img);
+        } else {
+          const placeholder = document.createElement("div");
+          placeholder.className = "w-full h-44 bg-white/10";
+          imageWrap.appendChild(placeholder);
+        }
+        const overlay = document.createElement("div");
+        overlay.className = "absolute inset-0 bg-gradient-to-b from-white/0 to-black/15 pointer-events-none";
+        imageWrap.appendChild(overlay);
+
+        const body = document.createElement("div");
+        body.className = "p-4 space-y-2 flex-1 flex flex-col";
+
+        const link = document.createElement("a");
+        link.href = `product_details.html?id=${encodeURIComponent(productId)}`;
+        link.className = "font-semibold text-base hover:underline cursor-pointer";
+        link.textContent = p.title || "-";
+
+        const catChip = document.createElement("div");
+        catChip.className = "inline-flex items-center px-2 py-1 rounded-full text-[0.7rem] font-medium bg-gradient-to-r from-accentFrom to-accentTo text-white/95";
+        catChip.textContent = p.category || "unknown";
+
+        const meta = document.createElement("div");
+        meta.className = "text-xs text-white/70 space-x-2";
+        const priceSpan = document.createElement("span");
+        priceSpan.className = "font-semibold text-white";
+        priceSpan.textContent = Number.isFinite(price) ? `GBP ${price.toFixed(2)}` : "-";
+        const ratingSpan = document.createElement("span");
+        ratingSpan.textContent = `Rating: ${p.rating ?? "-"}`;
+        meta.append(priceSpan, ratingSpan);
+
+        const availWrap = document.createElement("div");
+        availWrap.appendChild(availabilityBadgeElement(p.availability));
+
+        body.append(link, catChip, meta, availWrap);
+        card.append(imageWrap, body);
+        gridBody.appendChild(card);
+      });
+    }
+
+
+
+
+
+    function paginate(list) {
+      const totalPages = Math.max(1, Math.ceil(list.length / PAGE_SIZE));
+      if (currentPage > totalPages) currentPage = totalPages;
+      const start = (currentPage - 1) * PAGE_SIZE;
+      return { pageItems: list.slice(start, start + PAGE_SIZE), totalPages };
+    }
+
+    function updatePagination(totalPages, totalItems) {
+      if (!totalItems) {
+        paginationBar.classList.add("hidden");
+        return;
+      }
+      paginationBar.classList.remove("hidden");
+      pageInfo.textContent = `Page ${currentPage} of ${totalPages}`;
+      prevPage.disabled = currentPage === 1;
+      nextPage.disabled = currentPage === totalPages;
+      prevPage.classList.toggle("opacity-50", prevPage.disabled);
+      nextPage.classList.toggle("opacity-50", nextPage.disabled);
+    }
+
+    function render() {
+      clearErrorBar();
+      const total = allProducts.length;
+      const { pageItems, totalPages } = paginate(filtered);
+      summary.textContent = total
+        ? `Showing ${pageItems.length} of ${filtered.length} filtered products (page ${currentPage} of ${totalPages})`
+        : "No products available";
+      updatePagination(totalPages, filtered.length);
+      if (!filtered.length) {
+        renderTable(filtered);
+        renderGrid(filtered);
+        return;
+      }
+      if (tableView.style.display !== "none") renderTable(pageItems);
+      else renderGrid(pageItems);
+    }
+
+
+
+    function setView(view) {
+      if (view === "grid") {
+        gridView.style.display = "block";
+        tableView.style.display = "none";
+      } else {
+
+
+        gridView.style.display = "none";
+
+
+        tableView.style.display = "block";
+
+
+      }
+
+
+      render();
+
+
+    }
+
+
+
+
+
+    async function init() {
+      loadSavedViews();
+      renderSavedViews();
+      const saved = normaliseFilters(window.EcomState.getFilterState());
+      setControls(saved);
+      setLoadingState();
+      try {
+        const { products, generated_at } = await loadDataset();
+        allProducts = products.map(p => ({ ...p, category: normaliseCategoryValue(p.category) }));
+        populateCategories(allProducts);
+
+        const categorySet = new Set(allProducts.map(p => normaliseCategoryValue(p.category)));
+        if (saved.category && !categorySet.has(saved.category)) {
+          saved.category = "";
+          window.EcomState.setFilterState(saved);
+          setControls(saved);
+        }
+
+        filtered = window.EcomState.applyFilters(allProducts, saved);
+        filtered = window.EcomState.applySorting(filtered, saved.sort);
+        generatedAt.textContent = generated_at ? `Generated: ${humanDate(generated_at)}` : "";
+        render();
+      } catch (err) {
+        summary.textContent = err.message;
+        console.error(err);
+        showError(tableBody, err.message);
+        showError(gridBody, err.message);
+        showErrorBar(err.message);
+      }
+    }
+
+
+
+    applyBtn.addEventListener("click", applyFiltersAndRender);
+
+
+    clearBtn.addEventListener("click", clearFilters);
+
+
+    viewTable.addEventListener("click", () => setView("table"));
+
+
+    viewGrid.addEventListener("click", () => setView("grid"));
+    saveViewBtn.addEventListener("click", openSaveModal);
+    cancelSaveView.addEventListener("click", closeSaveModal);
+    confirmSaveView.addEventListener("click", saveCurrentView);
+    prevPage.addEventListener("click", () => {
+      if (currentPage > 1) {
+        currentPage -= 1;
+        render();
+      }
+    });
+    nextPage.addEventListener("click", () => {
+      const totalPages = Math.max(1, Math.ceil(filtered.length / PAGE_SIZE));
+      if (currentPage < totalPages) {
+        currentPage += 1;
+        render();
+      }
+    });
+
+    init();
+  </script>
+
+
+</body>
+
+
+</html>
+
+
+
+
+
+
+
+
+

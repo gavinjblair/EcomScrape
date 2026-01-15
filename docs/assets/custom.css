@@ -1,0 +1,79 @@
+.glass-topline {
+  position: relative;
+}
+.glass-topline::after {
+  content: "";
+  position: absolute;
+  top: 0;
+  left: 0;
+  width: 100%;
+  height: 1.5px;
+  background: rgba(255, 255, 255, 0.2);
+  border-radius: inherit;
+  pointer-events: none;
+}
+
+.text-neon {
+  text-shadow: 0 0 12px rgba(56, 189, 248, 0.6);
+}
+
+.legend-scroll {
+  max-height: 160px;
+  overflow-y: auto;
+}
+
+.legend-compact {
+  display: grid;
+  grid-template-columns: repeat(auto-fill, minmax(160px, 1fr));
+  gap: 8px;
+}
+
+.legend-item {
+  display: flex;
+  align-items: center;
+  justify-content: space-between;
+  font-size: 11px;
+  color: rgba(226, 232, 240, 0.85);
+}
+
+.legend-item-left {
+  display: flex;
+  align-items: center;
+  gap: 6px;
+}
+
+.legend-item-value {
+  color: rgba(226, 232, 240, 0.6);
+}
+
+.legend-item-full {
+  display: flex;
+  justify-content: space-between;
+  align-items: center;
+  gap: 12px;
+  font-size: 11px;
+  color: rgba(226, 232, 240, 0.9);
+  padding: 4px 0;
+  border-bottom: 1px solid rgba(255, 255, 255, 0.05);
+}
+
+.legend-dot {
+  width: 8px;
+  height: 8px;
+  border-radius: 9999px;
+  flex: none;
+}
+
+.overflow-visible {
+  overflow: visible;
+}
+
+.select-dark {
+  background-color: rgba(15, 23, 42, 0.9);
+  color: #e2e8f0;
+}
+
+.select-dark option {
+  background-color: #0b1220;
+  color: #e2e8f0;
+}

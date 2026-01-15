@@ -1,0 +1,13 @@
+{
+  "name": "ecomscrape",
+  "version": "0.1.0",
+  "private": true,
+  "devDependencies": {
+    "tailwindcss": "^3.4.1"
+  },
+  "scripts": {
+    "build:css": "tailwindcss -i ./docs/assets/input.css -o ./docs/assets/tailwind.css --minify",
+    "sync:data": "node scripts/sync-data.js",
+    "build:docs": "npm run build:css && npm run sync:data"
+  }
+}

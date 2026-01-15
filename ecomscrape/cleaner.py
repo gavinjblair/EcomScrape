@@ -1,5 +1,6 @@
 from __future__ import annotations
 
+import hashlib
 import logging
 import re
 from dataclasses import asdict
@@ -96,6 +97,15 @@ def _standardise_availability(value: Any, availability_map: Dict[str, str]) -> O
     return None
 
 
+def _stable_product_id(title: Optional[str], category: Optional[str], product_url: Optional[str], source_url: Optional[str]) -> str:
+    # Create a deterministic identifier for stable product URLs.
+    parts = [product_url, source_url, title, category]
+    base = "|".join(p.strip().lower() for p in parts if p)
+    if not base:
+        base = "unknown"
+    return hashlib.sha1(base.encode("utf-8")).hexdigest()[:12]
+
+
 def clean_products(
     records: List[Dict[str, Any]],
     currency: Optional[str] = None,
@@ -116,20 +126,25 @@ def clean_products(
 
     for record in records:
         title = record.get("title") or record.get("name")
+        category_val = record.get("category") or record.get("genre") or record.get("type") or record.get("category_name")
+        product_url = record.get("product_url") or record.get("url")
         prod = Product(
+            id=_stable_product_id(title, category_val, product_url, record.get("source_url")),
             title=title,
             name=record.get("name") or title,
             url=record.get("url"),
+            product_url=product_url,
             price_current=_clean_price(record.get("price_current")),
             price_original=_clean_price(record.get("price_original")),
             rating=_clean_rating(record.get("rating"), rating_map),
             availability=_standardise_availability(record.get("availability"), availability_map),
             image_url=record.get("image_url"),
             source_url=record.get("source_url"),
-            category=record.get("category"),
+            category=category_val or "unknown",
             currency=record.get("currency") or currency,
             review_count=_clean_review_count(record.get("review_count")),
             scraped_at=now_iso,
+            description=record.get("description"),
         )
         products.append(prod)
 
