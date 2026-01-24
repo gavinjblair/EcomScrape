@@ -8,11 +8,16 @@ from typing import Any, Dict, List, Optional
 
 from fastapi import FastAPI, HTTPException, Query
 from fastapi.responses import HTMLResponse
+from fastapi.staticfiles import StaticFiles
 
 DEFAULT_DATA_PATH = Path(__file__).resolve().parents[1] / "outputs" / "processed" / "latest_products.json"
-FRONTEND_DIR = Path(__file__).resolve().parents[1] / "frontend"
-INDEX_FILE = FRONTEND_DIR / "index.html"
-CHARTS_FILE = FRONTEND_DIR / "charts.html"
+UI_DIR = Path(__file__).resolve().parents[1] / "docs"
+INDEX_FILE = UI_DIR / "index.html"
+PRODUCTS_FILE = UI_DIR / "products.html"
+ANALYTICS_FILE = UI_DIR / "analytics.html"
+DETAILS_FILE = UI_DIR / "product_details.html"
+ASSETS_DIR = UI_DIR / "assets"
+DATASETS_DIR = UI_DIR / "datasets"
 
 
 def _resolve_data_path() -> Path:
@@ -45,22 +50,35 @@ def _filter_products(
 
 def create_app(data_path: Optional[Path] = None) -> FastAPI:
     path = data_path or _resolve_data_path()
+    if not UI_DIR.exists():
+        raise RuntimeError(f"UI directory not found: {UI_DIR}")
     app = FastAPI(title="EcomScrape API", version="0.1.0")
+
+    ui_dataset_path = DATASETS_DIR / "latest_products.json"
+
+    def _resolve_active_data_path() -> Optional[Path]:
+        if path.exists():
+            return path
+        if ui_dataset_path.exists():
+            return ui_dataset_path
+        return None
 
     def _load_products() -> List[Dict[str, Any]]:
         # Read the latest JSON snapshot; empty list if missing to avoid crashes.
-        if not path.exists():
+        active_path = _resolve_active_data_path()
+        if not active_path:
             return []
         try:
-            return json.loads(path.read_text(encoding="utf-8"))
+            return json.loads(active_path.read_text(encoding="utf-8"))
         except Exception as exc:
             raise HTTPException(status_code=500, detail=f"Failed to read data: {exc}") from exc
 
     def _generated_at_iso() -> Optional[str]:
         # Provide ISO timestamp for display and caching hints.
-        if not path.exists():
+        active_path = _resolve_active_data_path()
+        if not active_path:
             return None
-        return datetime.fromtimestamp(path.stat().st_mtime, tz=timezone.utc).isoformat()
+        return datetime.fromtimestamp(active_path.stat().st_mtime, tz=timezone.utc).isoformat()
 
     def _serve_html(file_path: Path) -> HTMLResponse:
         # Serve static frontend pages with a friendly error if missing.
@@ -72,12 +90,24 @@ def create_app(data_path: Optional[Path] = None) -> FastAPI:
     def serve_index() -> HTMLResponse:
         return _serve_html(INDEX_FILE)
 
+    @app.get("/analytics", response_class=HTMLResponse)
+    def serve_analytics() -> HTMLResponse:
+        return _serve_html(ANALYTICS_FILE)
+
     @app.get("/charts", response_class=HTMLResponse)
     def serve_charts() -> HTMLResponse:
-        return _serve_html(CHARTS_FILE)
+        # Backwards-compatible route for older links.
+        return _serve_html(ANALYTICS_FILE)
 
-    @app.get("/products")
-    def get_products(
+    @app.get("/product-details", response_class=HTMLResponse)
+    def serve_product_details() -> HTMLResponse:
+        return _serve_html(DETAILS_FILE)
+
+    @app.get("/products-page", response_class=HTMLResponse)
+    def serve_products_page() -> HTMLResponse:
+        return _serve_html(PRODUCTS_FILE)
+
+    def _products_payload(
         min_price: Optional[float] = Query(default=None, description="Minimum current price"),
         max_price: Optional[float] = Query(default=None, description="Maximum current price"),
         category: Optional[str] = Query(default=None, description="Exact category match"),
@@ -88,10 +118,52 @@ def create_app(data_path: Optional[Path] = None) -> FastAPI:
             "products": filtered,
             "count": len(filtered),
             "generated_at": _generated_at_iso(),
-            "data_path": str(path),
+            "data_path": str(_resolve_active_data_path() or path),
         }
+
+    @app.get("/products")
+    def get_products(
+        min_price: Optional[float] = Query(default=None, description="Minimum current price"),
+        max_price: Optional[float] = Query(default=None, description="Maximum current price"),
+        category: Optional[str] = Query(default=None, description="Exact category match"),
+    ) -> Dict[str, Any]:
+        return _products_payload(min_price=min_price, max_price=max_price, category=category)
+
+    @app.get("/api/products")
+    def get_products_api(
+        min_price: Optional[float] = Query(default=None, description="Minimum current price"),
+        max_price: Optional[float] = Query(default=None, description="Maximum current price"),
+        category: Optional[str] = Query(default=None, description="Exact category match"),
+    ) -> Dict[str, Any]:
+        return _products_payload(min_price=min_price, max_price=max_price, category=category)
+
+    @app.get("/api/health")
+    def health() -> Dict[str, Any]:
+        ui_updated_at = None
+        if INDEX_FILE.exists():
+            ui_updated_at = datetime.fromtimestamp(INDEX_FILE.stat().st_mtime, tz=timezone.utc).isoformat()
+        return {
+            "status": "ok",
+            "version": app.version,
+            "ui_updated_at": ui_updated_at,
+            "data_updated_at": _generated_at_iso(),
+            "data_path": str(_resolve_active_data_path() or path),
+        }
+
+    # Serve static UI assets and dataset.
+    if ASSETS_DIR.exists():
+        app.mount("/assets", StaticFiles(directory=ASSETS_DIR), name="assets")
+    if DATASETS_DIR.exists():
+        app.mount("/datasets", StaticFiles(directory=DATASETS_DIR), name="datasets")
+    app.mount("/", StaticFiles(directory=UI_DIR, html=True), name="ui")
 
     return app
 
 
 app = create_app()
+
+if __name__ == "__main__":
+    import uvicorn
+
+    port = int(os.getenv("PORT", "8000"))
+    uvicorn.run("ecomscrape.api:app", host="0.0.0.0", port=port)
