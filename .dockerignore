@@ -1,0 +1,12 @@
+.git
+node_modules
+.venv
+__pycache__
+*.pyc
+*.pyo
+*.pyd
+.pytest_cache
+.ipynb_checkpoints
+examples
+tests
+outputs
