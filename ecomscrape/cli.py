@@ -6,6 +6,8 @@ from pathlib import Path
 from typing import Dict, List, Tuple
 from urllib.parse import urljoin
 
+from bs4 import BeautifulSoup
+
 from .cleaner import clean_products
 from .config import ConfigError, ScraperConfig, load_config
 from .exporter import export_dataframe, write_latest_json
@@ -155,8 +157,12 @@ def _enrich_details(records: List[dict], fetcher: Fetcher, logger: logging.Logge
 
     urls = [u for _, u in targets]
     results = fetcher.fetch_all(urls) if fetcher.settings.max_workers > 1 else [fetcher.fetch(u) for u in urls]
+    results_by_url = {detail.url: detail for detail in results}
 
-    for (rec, _), detail in zip(targets, results):
+    for rec, prepared_url in targets:
+        detail = results_by_url.get(prepared_url)
+        if detail is None:
+            continue
         if not detail.html:
             continue
         try:

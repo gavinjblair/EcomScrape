@@ -87,25 +87,23 @@ class Fetcher:
             return response.text
 
     def fetch_all(self, urls: Iterable[str]) -> List[FetchRecord]:
-        results: List[FetchRecord] = []
         url_list = list(urls)
         if self.settings.max_workers <= 1:
-            for url in url_list:
-                results.append(self.fetch(url))
-            return results
+            return [self.fetch(url) for url in url_list]
 
         from concurrent.futures import ThreadPoolExecutor, as_completed
 
         self.logger.debug("Fetching %s URLs with max_workers=%s", len(url_list), self.settings.max_workers)
+        results: List[Optional[FetchRecord]] = [None] * len(url_list)
         with ThreadPoolExecutor(max_workers=self.settings.max_workers) as executor:
-            future_to_url = {executor.submit(self.fetch, url): url for url in url_list}
-            for future in as_completed(future_to_url):
+            future_to_index = {executor.submit(self.fetch, url): index for index, url in enumerate(url_list)}
+            for future in as_completed(future_to_index):
                 try:
-                    results.append(future.result())
+                    results[future_to_index[future]] = future.result()
                 except Exception as exc:
-                    failing_url = future_to_url[future]
+                    failing_url = url_list[future_to_index[future]]
                     self.logger.warning("Fetch failed for %s: %s", failing_url, exc)
-        return results
+        return [record for record in results if record is not None]
 
     def summary(self) -> Dict[str, int]:
         # Provide a lightweight roll-up for CLI logging and tests.
