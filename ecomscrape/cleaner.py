@@ -32,11 +32,47 @@ DEFAULT_RATING_WORD_MAP = {
     "five": 5,
 }
 
+COMMON_MOJIBAKE_REPLACEMENTS = {
+    '\u00e2"': "—",
+    '\u00e2\u20ac"': "—",
+    bytes([0xC2, 0xA3]).decode("cp1252"): "£",
+    bytes([0xE2, 0x80, 0x93]).decode("cp1252"): "–",
+    bytes([0xE2, 0x80, 0x94]).decode("cp1252"): "—",
+    bytes([0xE2, 0x80, 0x98]).decode("cp1252"): "‘",
+    bytes([0xE2, 0x80, 0x99]).decode("cp1252"): "’",
+    bytes([0xE2, 0x80, 0x9C]).decode("cp1252"): "“",
+    bytes([0xE2, 0x80, 0xA6]).decode("cp1252"): "…",
+}
+
+
+def _repair_mojibake(text: str) -> str:
+    # Recover common UTF-8 text that was decoded as latin-1 during scraping.
+    if not text or not any(token in text for token in ("Ã", "â", "Â")):
+        return text
+    for source_encoding in ("cp1252", "latin-1"):
+        try:
+            repaired = text.encode(source_encoding).decode("utf-8")
+        except UnicodeError:
+            continue
+        if repaired:
+            return repaired
+    repaired = text
+    for broken, replacement in COMMON_MOJIBAKE_REPLACEMENTS.items():
+        repaired = repaired.replace(broken, replacement)
+    return repaired
+
 
 def _normalise_text(value: Any) -> str:
     # Replace non-breaking spaces and compress whitespace for consistent parsing.
-    text = str(value).replace("\xa0", " ")
+    text = _repair_mojibake(str(value)).replace("\xa0", " ")
     return re.sub(r"\s+", " ", text).strip()
+
+
+def _normalise_optional_text(value: Any) -> Optional[str]:
+    if value is None:
+        return None
+    text = _normalise_text(value)
+    return text or None
 
 
 def _clean_price(value: Any) -> Optional[float]:
@@ -89,6 +125,9 @@ def _standardise_availability(value: Any, availability_map: Dict[str, str]) -> O
     if value is None:
         return None
     lower = _normalise_text(value).lower()
+    canonical_values = set(DEFAULT_AVAILABILITY_MAP.values()) | set(availability_map.values())
+    if lower in canonical_values:
+        return lower
     for key, canonical in availability_map.items():
         if key in lower:
             return canonical
@@ -125,26 +164,31 @@ def clean_products(
     now_iso = datetime.now(timezone.utc).isoformat()
 
     for record in records:
-        title = record.get("title") or record.get("name")
-        category_val = record.get("category") or record.get("genre") or record.get("type") or record.get("category_name")
-        product_url = record.get("product_url") or record.get("url")
+        title = _normalise_optional_text(record.get("title") or record.get("name"))
+        name = _normalise_optional_text(record.get("name")) or title
+        url = _normalise_optional_text(record.get("url"))
+        category_val = _normalise_optional_text(
+            record.get("category") or record.get("genre") or record.get("type") or record.get("category_name")
+        )
+        product_url = _normalise_optional_text(record.get("product_url")) or url
+        source_url = _normalise_optional_text(record.get("source_url"))
         prod = Product(
-            id=_stable_product_id(title, category_val, product_url, record.get("source_url")),
+            id=record.get("id") or _stable_product_id(title, category_val, product_url, source_url),
             title=title,
-            name=record.get("name") or title,
-            url=record.get("url"),
+            name=name,
+            url=url,
             product_url=product_url,
             price_current=_clean_price(record.get("price_current")),
             price_original=_clean_price(record.get("price_original")),
             rating=_clean_rating(record.get("rating"), rating_map),
             availability=_standardise_availability(record.get("availability"), availability_map),
-            image_url=record.get("image_url"),
-            source_url=record.get("source_url"),
+            image_url=_normalise_optional_text(record.get("image_url")),
+            source_url=source_url,
             category=category_val or "unknown",
-            currency=record.get("currency") or currency,
+            currency=_normalise_optional_text(record.get("currency")) or currency,
             review_count=_clean_review_count(record.get("review_count")),
-            scraped_at=now_iso,
-            description=record.get("description"),
+            scraped_at=record.get("scraped_at") or now_iso,
+            description=_normalise_optional_text(record.get("description")),
         )
         products.append(prod)
 

@@ -6,7 +6,10 @@ from datetime import datetime, timezone
 from pathlib import Path
 from typing import Any, Dict, Iterable, Optional
 
+import json
 import pandas as pd
+
+from .dataset import build_products_dataset
 
 LOGGER = logging.getLogger(__name__)
 
@@ -62,7 +65,9 @@ def write_latest_json(df: pd.DataFrame, output_dir: Path) -> Optional[Path]:
     ensure_dir(output_dir)
     latest_path = output_dir / "latest_products.json"
     try:
-        df.to_json(latest_path, orient="records", indent=2)
+        serialisable_df = df.where(pd.notna(df), None)
+        payload = build_products_dataset(serialisable_df.to_dict(orient="records"))
+        latest_path.write_text(json.dumps(payload, indent=2, ensure_ascii=False), encoding="utf-8")
         LOGGER.debug("Wrote latest JSON snapshot: %s", latest_path)
         return latest_path
     except Exception as exc:  # keep scraping resilient

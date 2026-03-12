@@ -59,7 +59,7 @@ class Fetcher:
             response = self.session.get(url, headers=headers, timeout=self.settings.timeout)
             status = response.status_code
             response.raise_for_status()
-            html = response.text
+            html = self._decode_response(response)
             error = None
         except Exception as exc:  # broad to continue scraping
             html = None
@@ -75,6 +75,16 @@ class Fetcher:
         record = FetchRecord(url=url, html=html, headers=headers, status_code=status, error=error)
         self.records.append(record)
         return record
+
+    def _decode_response(self, response: requests.Response) -> str:
+        # Prefer the apparent encoding when the server falls back to a generic latin-1 response.
+        encoding = response.encoding
+        if not encoding or encoding.lower() == "iso-8859-1":
+            encoding = response.apparent_encoding or encoding or "utf-8"
+        try:
+            return response.content.decode(encoding, errors="replace")
+        except (LookupError, UnicodeDecodeError):
+            return response.text
 
     def fetch_all(self, urls: Iterable[str]) -> List[FetchRecord]:
         results: List[FetchRecord] = []

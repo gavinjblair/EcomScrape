@@ -21,6 +21,10 @@ env/
 outputs/raw/
 outputs/scrape.log
 
+# JS / packaging artefacts
+node_modules/
+*.egg-info/
+
 # OS junk
 .DS_Store
 Thumbs.db

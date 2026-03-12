@@ -10,6 +10,8 @@ from fastapi import FastAPI, HTTPException, Query
 from fastapi.responses import HTMLResponse
 from fastapi.staticfiles import StaticFiles
 
+from .dataset import parse_products_dataset
+
 DEFAULT_DATA_PATH = Path(__file__).resolve().parents[1] / "outputs" / "processed" / "latest_products.json"
 UI_DIR = Path(__file__).resolve().parents[1] / "docs"
 INDEX_FILE = UI_DIR / "index.html"
@@ -63,22 +65,31 @@ def create_app(data_path: Optional[Path] = None) -> FastAPI:
             return ui_dataset_path
         return None
 
-    def _load_products() -> List[Dict[str, Any]]:
-        # Read the latest JSON snapshot; empty list if missing to avoid crashes.
+    def _file_updated_at_iso(active_path: Optional[Path]) -> Optional[str]:
+        if not active_path:
+            return None
+        return datetime.fromtimestamp(active_path.stat().st_mtime, tz=timezone.utc).isoformat()
+
+    def _load_dataset() -> Dict[str, Any]:
+        # Read the latest JSON snapshot and normalise legacy/new payloads into one shape.
         active_path = _resolve_active_data_path()
         if not active_path:
-            return []
+            return {"products": [], "generated_at": None}
         try:
-            return json.loads(active_path.read_text(encoding="utf-8"))
+            raw = json.loads(active_path.read_text(encoding="utf-8"))
+            products, generated_at = parse_products_dataset(raw)
+            return {
+                "products": products,
+                "generated_at": generated_at or _file_updated_at_iso(active_path),
+            }
+        except ValueError as exc:
+            raise HTTPException(status_code=500, detail=f"Invalid dataset format: {exc}") from exc
         except Exception as exc:
             raise HTTPException(status_code=500, detail=f"Failed to read data: {exc}") from exc
 
     def _generated_at_iso() -> Optional[str]:
         # Provide ISO timestamp for display and caching hints.
-        active_path = _resolve_active_data_path()
-        if not active_path:
-            return None
-        return datetime.fromtimestamp(active_path.stat().st_mtime, tz=timezone.utc).isoformat()
+        return _load_dataset()["generated_at"]
 
     def _serve_html(file_path: Path) -> HTMLResponse:
         # Serve static frontend pages with a friendly error if missing.
@@ -112,12 +123,13 @@ def create_app(data_path: Optional[Path] = None) -> FastAPI:
         max_price: Optional[float] = Query(default=None, description="Maximum current price"),
         category: Optional[str] = Query(default=None, description="Exact category match"),
     ) -> Dict[str, Any]:
-        products = _load_products()
+        dataset = _load_dataset()
+        products = dataset["products"]
         filtered = _filter_products(products, min_price=min_price, max_price=max_price, category=category)
         return {
             "products": filtered,
             "count": len(filtered),
-            "generated_at": _generated_at_iso(),
+            "generated_at": dataset["generated_at"],
             "data_path": str(_resolve_active_data_path() or path),
         }
 

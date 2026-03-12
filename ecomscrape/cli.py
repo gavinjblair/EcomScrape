@@ -6,13 +6,12 @@ from pathlib import Path
 from typing import Dict, List, Tuple
 from urllib.parse import urljoin
 
-from bs4 import BeautifulSoup
-
 from .cleaner import clean_products
 from .config import ConfigError, ScraperConfig, load_config
 from .exporter import export_dataframe, write_latest_json
 from .fetch import Fetcher
 from .parser import Parser
+from .site_adapters import SiteAdapter, get_site_adapter
 
 
 def setup_logging(debug: bool, log_file: Path) -> logging.Logger:
@@ -132,17 +131,10 @@ def _build_url_plan(
     raise ConfigError(f"Unsupported pagination mode: {pagination.mode}")
 
 
-def _fix_product_url(url: str) -> str:
-    # BooksToScrape detail pages live under /catalogue/. Repair URLs missing that segment.
-    if "/catalogue/" not in url:
-        return url.replace("https://books.toscrape.com/", "https://books.toscrape.com/catalogue/")
-    return url
-
-
-def _enrich_details(records: List[dict], fetcher: Fetcher, logger: logging.Logger) -> None:
+def _enrich_details(records: List[dict], fetcher: Fetcher, logger: logging.Logger, site_adapter: SiteAdapter) -> None:
     """
     For any record missing category/description, fetch its product page and extract details.
-    This is specific to BooksToScrape structure.
+    Site-specific selectors live behind adapters instead of the generic CLI.
     """
     targets = []
     for rec in records:
@@ -153,7 +145,7 @@ def _enrich_details(records: List[dict], fetcher: Fetcher, logger: logging.Logge
         product_url = rec.get("product_url") or rec.get("url")
         if not product_url:
             continue
-        targets.append((rec, _fix_product_url(product_url)))
+        targets.append((rec, site_adapter.prepare_product_url(product_url)))
 
     if not targets:
         return
@@ -168,15 +160,13 @@ def _enrich_details(records: List[dict], fetcher: Fetcher, logger: logging.Logge
         if not detail.html:
             continue
         try:
-            soup = BeautifulSoup(detail.html, "lxml")
-            cat_node = soup.select_one("ul.breadcrumb li:nth-last-child(2) a")
-            if cat_node:
-                rec["category"] = cat_node.get_text(strip=True)
-            desc_node = soup.select_one("#product_description + p")
-            if desc_node:
-                rec["description"] = desc_node.get_text(strip=True)
+            detail_fields = site_adapter.extract_detail_fields(detail.html)
+            if detail_fields.category:
+                rec["category"] = detail_fields.category
+            if detail_fields.description:
+                rec["description"] = detail_fields.description
         except Exception as exc:  # keep enrichment resilient
-            logger.debug("Failed to enrich category for %s: %s", detail.url, exc)
+            logger.debug("Failed to enrich details for %s: %s", detail.url, exc)
 
     fetcher.settings.delay_between_requests = original_delay
 
@@ -199,6 +189,7 @@ def run(argv: List[str] | None = None) -> int:
     logger.info("Starting scrape for site '%s'", scraper_config.site_name)
     fetcher = Fetcher(scraper_config.request, logger=logger)
     parser = Parser(scraper_config.parsing, base_url=scraper_config.base_url, logger=logger)
+    site_adapter = get_site_adapter(scraper_config.site_name, scraper_config.base_url)
 
     urls_to_fetch, html_cache = _build_url_plan(scraper_config, fetcher, args.dry_run, logger)
 
@@ -245,8 +236,11 @@ def run(argv: List[str] | None = None) -> int:
         logger.info("Dry run: parsed %s products; skipping export.", len(raw_records))
         return 0
 
-    # Enrich missing categories by visiting product detail pages when available.
-    _enrich_details(raw_records, fetcher, logger)
+    # Enrich missing fields only when a site adapter is registered for the current site.
+    if site_adapter:
+        _enrich_details(raw_records, fetcher, logger, site_adapter)
+    else:
+        logger.debug("No site adapter registered for '%s'; skipping detail enrichment.", scraper_config.site_name)
 
     products, cleaned_df = clean_products(
         raw_records, currency=scraper_config.currency, cleaning=scraper_config.cleaning

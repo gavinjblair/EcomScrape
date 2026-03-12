@@ -1,5 +1,0 @@
-configs
-ecomscrape
-examples
-frontend
-outputs
